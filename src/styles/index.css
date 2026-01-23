@@ -1,0 +1,485 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  --primary: #1f3c88;
+  --primary-hover: #162d66;
+  --bg: #f4f6f9;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #d1d5db;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* HEADER */
+
+.app-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.top-nav {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.nav-btn {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,.25);
+}
+
+.nav-btn.active {
+  background: #fff;
+  color: var(--primary);
+}
+
+.nav-btn.logout {
+  border: 1px solid rgba(255,255,255,.4);
+}
+
+/* PAGE CENTER */
+
+.center-page {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CARD */
+
+.open-ticket {
+  background: #fff;
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+}
+
+.open-ticket h2 {
+  margin: 0;
+}
+
+.open-ticket p {
+  margin: 6px 0 24px;
+  color: var(--muted);
+}
+
+/* FORM */
+
+.open-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* BUTTON */
+
+.form-actions.center {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 12px 26px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+/* ================= LOGIN ================= */
+
+.center-page {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.auth-card p {
+  margin-top: 6px;
+  margin-bottom: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-form label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.auth-form input {
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(31, 60, 136, 0.15);
+}
+
+.auth-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.auth-actions button {
+  width: 160px;
+  height: 44px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* ================= LOGIN HEADER (SEM BOTÕES) ================= */
+
+.login-header {
+  background: var(--primary);
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-header h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ================= DASHBOARD ================= */
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.page-subtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* GRID DE CARDS */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+/* CARD BASE */
+
+.dashboard-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.dashboard-card span {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dashboard-card strong {
+  font-size: 42px;
+  font-weight: 700;
+}
+
+/* VARIAÇÕES POR STATUS */
+
+.dashboard-card.total strong {
+  color: var(--primary);
+}
+
+.dashboard-card.aberto strong {
+  color: #d97706;
+}
+
+.dashboard-card.atendimento strong {
+  color: #2563eb;
+}
+
+.dashboard-card.concluido strong {
+  color: #16a34a;
+}
+
+/* TELA GESTÃO DE CHAMADOS */
+
+.chamados-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* FORMULÁRIO */
+
+.form-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.form-card h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* TABELA */
+
+.table-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f1f5f9;
+}
+
+td {
+  padding: 14px;
+  font-size: 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* STATUS BADGES */
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.aberto {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.atendimento {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge.concluido {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* AÇÕES */
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background: #f3f4f6;
+}
+
+/* RESPONSIVO */
+
+@media (max-width: 900px) {
+  .chamados-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* FINAL DA TELA GESTÃO DE CHAMADOS */
