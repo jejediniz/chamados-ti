@@ -36,8 +36,12 @@ export default function ChamadoRapido() {
       responsavel: form.responsavel,
       demanda: form.demanda,
       obs: `${form.setor} - ${form.obs}`,
-      status: "Aberto",
-      data: new Date().toISOString().split("T")[0],
+      status: "ABERTO",
+      criadoEm: new Date().toISOString(),
+
+      // 🔒 CAMPOS OBRIGATÓRIOS
+      historico: [],
+      comentarios: [],
     });
 
     setForm({ demanda: "", responsavel: "", setor: "", obs: "" });
@@ -51,7 +55,6 @@ export default function ChamadoRapido() {
         <p>Informe o problema para o suporte de TI</p>
 
         <form onSubmit={handleSubmit} className="open-form">
-
           <div>
             <label>Qual é o problema?</label>
             <select name="demanda" value={form.demanda} onChange={handleChange}>
@@ -95,7 +98,6 @@ export default function ChamadoRapido() {
           <div className="form-actions center">
             <button className="btn-primary">Abrir Chamado</button>
           </div>
-
         </form>
       </div>
     </div>

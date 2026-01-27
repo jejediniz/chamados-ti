@@ -1,15 +1,41 @@
-import { useContext, useState } from "react";
-import { ChamadosContext } from "../contextos/chamadosContext";
+import { useState } from "react";
+import { useChamados } from "../contextos/chamadosContext";
+import { useAuth } from "../contextos/authContext";
+import { STATUS_CHAMADO } from "../services/chamadosService";
+
+const STATUS_LABEL = {
+  ABERTO: "Aberto",
+  EM_ATENDIMENTO: "Em atendimento",
+  AGUARDANDO_CLIENTE: "Aguardando cliente",
+  AGUARDANDO_TERCEIRO: "Aguardando terceiro",
+  RESOLVIDO: "Resolvido",
+  FECHADO: "Fechado",
+};
+
+function formatarDataBR(dataISO) {
+  if (!dataISO) return "-";
+  return new Date(dataISO).toLocaleDateString("pt-BR");
+}
 
 export default function Chamados() {
-  const { chamados, criarChamado, removerChamado } =
-    useContext(ChamadosContext);
+  const {
+    chamados,
+    criarChamado,
+    atualizarChamado,
+    excluirChamado,
+    chamadoEmEdicao,
+    setChamadoEmEdicao,
+  } = useChamados();
+
+  const { usuario } = useAuth();
+  const isAdmin = usuario?.perfil === "ADMIN";
 
   const [form, setForm] = useState({
     responsavel: "",
-    data: "",
     demanda: "",
-    status: "Aberto",
+    categoria: "SUPORTE",
+    impacto: "MEDIO",
+    status: STATUS_CHAMADO.ABERTO,
     obs: "",
   });
 
@@ -17,39 +43,73 @@ export default function Chamados() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    if (!form.responsavel || !form.data || !form.demanda) {
-      alert("Preencha os campos obrigatórios");
-      return;
-    }
-
-    criarChamado(form);
-
+  function limpar() {
+    setChamadoEmEdicao(null);
     setForm({
       responsavel: "",
-      data: "",
       demanda: "",
-      status: "Aberto",
+      categoria: "SUPORTE",
+      impacto: "MEDIO",
+      status: STATUS_CHAMADO.ABERTO,
       obs: "",
     });
   }
 
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.responsavel || !form.demanda) return;
+
+    if (chamadoEmEdicao) {
+      atualizarChamado(chamadoEmEdicao.id, form);
+    } else {
+      criarChamado(form);
+    }
+
+    limpar();
+  }
+
+  function editarChamado(c) {
+    setChamadoEmEdicao({
+      ...c,
+      historico: Array.isArray(c.historico) ? c.historico : [],
+      comentarios: Array.isArray(c.comentarios) ? c.comentarios : [],
+    });
+
+    setForm({
+      responsavel: c.responsavel || "",
+      demanda: c.demanda || "",
+      categoria: c.categoria || "SUPORTE",
+      impacto: c.impacto || "MEDIO",
+      status: c.status || STATUS_CHAMADO.ABERTO,
+      obs: c.obs || "",
+    });
+  }
+
+  function removerChamado(id) {
+    if (!isAdmin) return;
+
+    const confirmar = window.confirm(
+      "Tem certeza que deseja excluir este chamado?"
+    );
+
+    if (confirmar) {
+      excluirChamado(id);
+    }
+  }
+
   return (
-    <div>
-      {/* CABEÇALHO */}
+    <>
       <div className="page-header">
         <h2>Chamados</h2>
         <p className="page-subtitle">
-          Registro e acompanhamento de chamados
+          Fluxo profissional de atendimento
         </p>
       </div>
 
       <div className="chamados-layout">
         {/* FORMULÁRIO */}
         <div className="form-card">
-          <h3>Novo Chamado</h3>
+          <h3>{chamadoEmEdicao ? "Editar chamado" : "Novo chamado"}</h3>
 
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -57,16 +117,6 @@ export default function Chamados() {
               <input
                 name="responsavel"
                 value={form.responsavel}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Data</label>
-              <input
-                type="date"
-                name="data"
-                value={form.data}
                 onChange={handleChange}
               />
             </div>
@@ -81,15 +131,42 @@ export default function Chamados() {
             </div>
 
             <div className="form-group">
+              <label>Categoria</label>
+              <select
+                name="categoria"
+                value={form.categoria}
+                onChange={handleChange}
+              >
+                <option value="SUPORTE">Suporte</option>
+                <option value="INFRA">Infraestrutura</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Impacto</label>
+              <select
+                name="impacto"
+                value={form.impacto}
+                onChange={handleChange}
+              >
+                <option value="BAIXO">Baixo</option>
+                <option value="MEDIO">Médio</option>
+                <option value="ALTO">Alto</option>
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Status</label>
               <select
                 name="status"
                 value={form.status}
                 onChange={handleChange}
               >
-                <option>Aberto</option>
-                <option>Em Atendimento</option>
-                <option>Concluído</option>
+                {Object.values(STATUS_CHAMADO).map(s => (
+                  <option key={s} value={s}>
+                    {STATUS_LABEL[s]}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -110,64 +187,79 @@ export default function Chamados() {
           </form>
         </div>
 
-        {/* TABELA */}
+        {/* LISTA */}
         <div className="table-card">
           <div className="table-header">
-            <h3>Chamados Registrados</h3>
+            <h3>Chamados registrados</h3>
           </div>
 
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Responsável</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                  <th>Demanda</th>
-                  <th>Obs</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+          <table className="chamados-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Demanda</th>
+                <th>Responsável</th>
+                <th>Abertura</th>
+                <th>Prioridade</th>
+                <th>SLA (h)</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {chamados.map((c) => (
-                  <tr key={c.id}>
-                    <td>{c.id}</td>
-                    <td>{c.responsavel}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          c.status === "Aberto"
-                            ? "aberto"
-                            : c.status === "Em Atendimento"
-                            ? "atendimento"
-                            : "concluido"
-                        }`}
+            <tbody>
+              {chamados.map(c => (
+                <tr key={c.id}>
+                  <td>
+                    <span
+                      className={`status status-${c.status?.toLowerCase()}`}
+                    >
+                      {STATUS_LABEL[c.status]}
+                    </span>
+                  </td>
+                  <td>{c.demanda}</td>
+                  <td>{c.responsavel}</td>
+                  <td>{formatarDataBR(c.criadoEm)}</td>
+                  <td>{c.prioridade || "-"}</td>
+                  <td>{c.slaHoras ?? "-"}</td>
+                  <td>
+                    <button onClick={() => editarChamado(c)}>
+                      Editar
+                    </button>
+
+                    {isAdmin && (
+                      <button
+                        className="btn-danger"
+                        onClick={() => removerChamado(c.id)}
                       >
-                        {c.status}
-                      </span>
-                    </td>
-                    <td>{c.data}</td>
-                    <td>{c.demanda}</td>
-                    <td>{c.obs}</td>
-                    <td>
-                      <div className="actions">
-                        <button>✏️</button>
-                        <button
-                          onClick={() => removerChamado(c.id)}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        Excluir
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+
+      {/* HISTÓRICO */}
+      {chamadoEmEdicao && (
+        <div className="form-card">
+          <h3>Histórico do chamado</h3>
+
+          {chamadoEmEdicao.historico.length === 0 ? (
+            <p>Nenhum histórico disponível.</p>
+          ) : (
+            <ul>
+              {chamadoEmEdicao.historico.map((h, i) => (
+                <li key={i}>
+                  {new Date(h.data).toLocaleString("pt-BR")} — {h.acao}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </>
   );
 }

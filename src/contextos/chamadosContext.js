@@ -1,56 +1,67 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { listarChamados, salvarChamado } from "../services/chamadosService";
+import {
+  listarChamados,
+  salvarChamado,
+  atualizarChamadoStorage,
+  excluirChamadoStorage,
+} from "../services/chamadosService";
 import { useAuth } from "./authContext";
 
 export const ChamadosContext = createContext();
 
 export function ChamadosProvider({ children }) {
-  const auth = useAuth();
-  const empresaAtiva = auth?.empresaAtiva;
+  const { empresaAtiva, usuario } = useAuth();
 
   const [chamados, setChamados] = useState([]);
+  const [chamadoEmEdicao, setChamadoEmEdicao] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
-  /**
-   * Carrega chamados SOMENTE quando a empresa existir
-   */
   useEffect(() => {
-    async function carregarChamados() {
+    async function carregar() {
       if (!empresaAtiva) {
         setChamados([]);
         setCarregando(false);
         return;
       }
 
-      try {
-        setCarregando(true);
-        const dados = await listarChamados(empresaAtiva.id);
-        setChamados(dados);
-      } catch (error) {
-        console.error("Erro ao carregar chamados:", error);
-        setChamados([]);
-      } finally {
-        setCarregando(false);
-      }
+      setCarregando(true);
+      const dados = await listarChamados(empresaAtiva.id);
+      setChamados(dados);
+      setCarregando(false);
     }
 
-    carregarChamados();
+    carregar();
   }, [empresaAtiva]);
 
-  /**
-   * Cria chamado sempre vinculado à empresa ativa
-   */
-  async function criarChamado(dadosChamado) {
-    if (!empresaAtiva) {
-      throw new Error("Empresa não definida");
-    }
+  async function criarChamado(dados) {
+    const novo = await salvarChamado(empresaAtiva.id, dados);
+    setChamados(prev => [...prev, novo]);
+  }
 
-    const novoChamado = await salvarChamado(
+  async function atualizarChamado(id, dados) {
+    const atualizado = await atualizarChamadoStorage(
       empresaAtiva.id,
-      dadosChamado
+      id,
+      dados
     );
 
-    setChamados((estadoAtual) => [...estadoAtual, novoChamado]);
+    setChamados(prev =>
+      prev.map(c => (c.id === id ? atualizado : c))
+    );
+
+    setChamadoEmEdicao(null);
+  }
+
+  async function excluirChamado(id) {
+    if (usuario?.perfil !== "ADMIN") {
+      throw new Error("Ação não permitida");
+    }
+
+    await excluirChamadoStorage(empresaAtiva.id, id);
+
+    setChamados(prev =>
+      prev.filter(c => c.id !== id)
+    );
   }
 
   return (
@@ -58,6 +69,10 @@ export function ChamadosProvider({ children }) {
       value={{
         chamados,
         criarChamado,
+        atualizarChamado,
+        excluirChamado, // ✅ AGORA ESTÁ SENDO USADO
+        chamadoEmEdicao,
+        setChamadoEmEdicao,
         carregando,
       }}
     >

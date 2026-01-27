@@ -12,7 +12,7 @@ export default function Cabecalho() {
 
   return (
     <header className="app-header">
-      <h1>Chamados TI</h1>
+      <h1>Sistemas de chamados da T.i</h1>
 
       <nav className="top-nav">
         <NavLink to="/" className={linkClass}>

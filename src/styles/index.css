@@ -483,3 +483,293 @@ tbody tr:hover {
 }
 
 /* FINAL DA TELA GESTÃO DE CHAMADOS */
+
+/* STATUS PADRONIZADO */
+
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-aberto {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status-em_andamento {
+  background: #fff8e1;
+  color: #ff8f00;
+}
+
+.status-aguardando_usuario {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
+.status-resolvido {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* ===============================
+   STATUS MAIS CLARO
+================================ */
+
+.status {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-aberto {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status-em_andamento {
+  background: #fff8e1;
+  color: #ff8f00;
+}
+
+.status-aguardando_usuario {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
+.status-resolvido {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* ===============================
+   BOTÃO DE AÇÃO
+================================ */
+
+.btn-action {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-action:hover {
+  background: #f3f4f6;
+}
+
+/* ===============================
+   VISÃO CLIENTE - CHAMADOS
+================================ */
+
+.cliente-chamados {
+  display: grid;
+  gap: 16px;
+}
+
+.cliente-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.cliente-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cliente-card .data {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cliente-card .demanda {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.cliente-card .obs {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+/* ===============================
+   AJUSTES DE TABELA - CHAMADOS
+================================ */
+
+.table-card table {
+  table-layout: fixed;
+}
+
+.table-card th,
+.table-card td {
+  vertical-align: middle;
+}
+
+.table-card th:first-child,
+.table-card td:first-child {
+  width: 160px;
+  text-align: center;
+}
+
+.table-card th:nth-child(4),
+.table-card td:nth-child(4) {
+  width: 140px;
+  white-space: nowrap;
+}
+
+.table-card th:last-child,
+.table-card td:last-child {
+  width: 120px;
+  text-align: right;
+}
+
+/* ===============================
+   BOTÃO DE AÇÃO
+================================ */
+
+.btn-action {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-action:hover {
+  background: #f3f4f6;
+}
+
+/* ===============================
+   TABELA PROFISSIONAL - CHAMADOS
+================================ */
+
+.chamados-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.chamados-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.chamados-table td {
+  padding: 16px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.chamados-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* COLUNAS CONTROLADAS */
+
+.col-status {
+  width: 160px;
+  text-align: center;
+}
+
+.col-demanda {
+  width: auto;
+  font-weight: 500;
+}
+
+.col-responsavel {
+  width: 180px;
+}
+
+.col-data {
+  width: 140px;
+  white-space: nowrap;
+}
+
+.col-acoes {
+  width: 120px;
+  text-align: right;
+}
+
+/* BOTÃO */
+
+.btn-action {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-action:hover {
+  background: #f3f4f6;
+}
+
+/* STATUS REFINADO */
+
+.status {
+  display: inline-block;
+  min-width: 120px;
+  text-align: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-aberto {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status-em_andamento {
+  background: #fff8e1;
+  color: #ff8f00;
+}
+
+.status-aguardando_usuario {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
+.status-resolvido {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+/* STATUS AVANÇADOS */
+
+.status-aguardando_cliente {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.status-aguardando_terceiro {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.status-fechado {
+  background: #f3f4f6;
+  color: #374151;
+}
