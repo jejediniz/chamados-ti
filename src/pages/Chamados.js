@@ -99,6 +99,7 @@ export default function Chamados() {
 
   return (
     <>
+      {/* CABEÇALHO */}
       <div className="page-header">
         <h2>Chamados</h2>
         <p className="page-subtitle">
@@ -187,7 +188,7 @@ export default function Chamados() {
           </form>
         </div>
 
-        {/* LISTA */}
+        {/* TABELA */}
         <div className="table-card">
           <div className="table-header">
             <h3>Chamados registrados</h3>
@@ -221,19 +222,24 @@ export default function Chamados() {
                   <td>{formatarDataBR(c.criadoEm)}</td>
                   <td>{c.prioridade || "-"}</td>
                   <td>{c.slaHoras ?? "-"}</td>
-                  <td>
-                    <button onClick={() => editarChamado(c)}>
-                      Editar
-                    </button>
-
-                    {isAdmin && (
+                  <td className="acoes-cell">
+                    <div className="acoes">
                       <button
-                        className="btn-danger"
-                        onClick={() => removerChamado(c.id)}
+                        className="btn-acao btn-editar"
+                        onClick={() => editarChamado(c)}
                       >
-                        Excluir
+                        Editar
                       </button>
-                    )}
+
+                      {isAdmin && c.status !== STATUS_CHAMADO.FECHADO && (
+                        <button
+                          className="btn-acao btn-excluir"
+                          onClick={() => removerChamado(c.id)}
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
