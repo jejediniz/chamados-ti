@@ -1,79 +1,58 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   listarChamados,
-  salvarChamado,
-  atualizarChamadoStorage,
-  excluirChamadoStorage,
-} from "../services/chamadosService";
-import { useAuth } from "./authContext";
+  criarChamado,
+  atualizarStatusChamado,
+  excluirChamado,
+} from "../services/chamadosApi";
 
-export const ChamadosContext = createContext();
+const ChamadosContext = createContext(null);
 
 export function ChamadosProvider({ children }) {
-  const { empresaAtiva, usuario } = useAuth();
-
   const [chamados, setChamados] = useState([]);
+  const [carregando, setCarregando] = useState(false);
   const [chamadoEmEdicao, setChamadoEmEdicao] = useState(null);
-  const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    async function carregar() {
-      if (!empresaAtiva) {
-        setChamados([]);
-        setCarregando(false);
-        return;
-      }
-
-      setCarregando(true);
-      const dados = await listarChamados(empresaAtiva.id);
-      setChamados(dados);
+  async function carregarChamados() {
+    setCarregando(true);
+    try {
+      const data = await listarChamados();
+      setChamados(data);
+    } finally {
       setCarregando(false);
     }
-
-    carregar();
-  }, [empresaAtiva]);
-
-  async function criarChamado(dados) {
-    const novo = await salvarChamado(empresaAtiva.id, dados);
-    setChamados(prev => [...prev, novo]);
   }
 
-  async function atualizarChamado(id, dados) {
-    const atualizado = await atualizarChamadoStorage(
-      empresaAtiva.id,
-      id,
-      dados
-    );
+  useEffect(() => {
+    carregarChamados();
+  }, []);
 
-    setChamados(prev =>
-      prev.map(c => (c.id === id ? atualizado : c))
-    );
-
-    setChamadoEmEdicao(null);
+  async function criarChamadoContext(dados) {
+    await criarChamado(dados);
+    carregarChamados();
   }
 
-  async function excluirChamado(id) {
-    if (usuario?.perfil !== "ADMIN") {
-      throw new Error("Ação não permitida");
-    }
+  async function atualizarChamadoContext(id, status) {
+    await atualizarStatusChamado(id, status);
+    carregarChamados();
+  }
 
-    await excluirChamadoStorage(empresaAtiva.id, id);
-
-    setChamados(prev =>
-      prev.filter(c => c.id !== id)
-    );
+  async function excluirChamadoContext(id) {
+    await excluirChamado(id);
+    carregarChamados();
   }
 
   return (
     <ChamadosContext.Provider
       value={{
         chamados,
-        criarChamado,
-        atualizarChamado,
-        excluirChamado, // ✅ AGORA ESTÁ SENDO USADO
+        carregando,
         chamadoEmEdicao,
         setChamadoEmEdicao,
-        carregando,
+        criarChamado: criarChamadoContext,
+        atualizarChamado: atualizarChamadoContext,
+        excluirChamado: excluirChamadoContext,
+        recarregar: carregarChamados,
       }}
     >
       {children}
@@ -82,5 +61,9 @@ export function ChamadosProvider({ children }) {
 }
 
 export function useChamados() {
-  return useContext(ChamadosContext);
+  const ctx = useContext(ChamadosContext);
+  if (!ctx) {
+    throw new Error("useChamados deve ser usado dentro de ChamadosProvider");
+  }
+  return ctx;
 }

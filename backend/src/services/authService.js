@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const pool = require('../../database')
+const pool = require('../config/database')
 
 async function registrar({ nome, email, senha }) {
   const senha_hash = await bcrypt.hash(senha, 10)

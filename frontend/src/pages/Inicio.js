@@ -1,6 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import { ChamadosContext } from "../contextos/chamadosContext";
-import { STATUS_CHAMADO } from "../services/chamadosService";
+import { useEffect, useState } from "react";
+import { useChamados } from "../contextos/chamadosContext";
 
 /* ======================
    HOOK DE ANIMAÇÃO
@@ -29,83 +28,31 @@ function useAnimatedNumber(valor, duracao = 500) {
 }
 
 export default function Inicio() {
-  const { chamados } = useContext(ChamadosContext);
-
-  const hoje = new Date().toISOString().split("T")[0];
+  const { chamados } = useChamados();
 
   /* ======================
-     MÉTRICAS
+     MÉTRICAS REAIS
   ====================== */
   const total = chamados.length;
 
-  const abertos = chamados.filter(
-    c => c.status === STATUS_CHAMADO.ABERTO
-  ).length;
-
-  const atendimento = chamados.filter(
-    c => c.status === STATUS_CHAMADO.EM_ATENDIMENTO
-  ).length;
-
-  const concluidos = chamados.filter(
-    c =>
-      c.status === STATUS_CHAMADO.RESOLVIDO ||
-      c.status === STATUS_CHAMADO.FECHADO
-  ).length;
-
-  const criadosHoje = chamados.filter(
-    c => c.criadoEm?.startsWith(hoje)
-  ).length;
-
-  const fechadosHoje = chamados.filter(
-    c => c.fechadoEm?.startsWith(hoje)
-  ).length;
-
-  function estourouSLA(chamado) {
-    if (
-      chamado.status === STATUS_CHAMADO.FECHADO ||
-      chamado.status === STATUS_CHAMADO.RESOLVIDO
-    ) {
-      return false;
-    }
-
-    const criado = new Date(chamado.criadoEm);
-    const limite = new Date(
-      criado.getTime() + chamado.slaHoras * 60 * 60 * 1000
-    );
-
-    return new Date() > limite;
-  }
-
-  const atrasados = chamados.filter(estourouSLA).length;
-
-  const chamadosAtencao = chamados
-    .filter(
-      c =>
-        c.prioridade === "CRITICA" ||
-        estourouSLA(c) ||
-        c.status === STATUS_CHAMADO.AGUARDANDO_CLIENTE
-    )
-    .slice(0, 5);
+  const abertos = chamados.filter(c => c.status === "aberto").length;
+  const andamento = chamados.filter(c => c.status === "em_andamento").length;
+  const fechados = chamados.filter(c => c.status === "fechado").length;
 
   /* ======================
      NÚMEROS ANIMADOS
   ====================== */
   const totalAnimado = useAnimatedNumber(total);
   const abertosAnimado = useAnimatedNumber(abertos);
-  const atendimentoAnimado = useAnimatedNumber(atendimento);
-  const concluidosAnimado = useAnimatedNumber(concluidos);
-  const criadosHojeAnimado = useAnimatedNumber(criadosHoje);
-  const fechadosHojeAnimado = useAnimatedNumber(fechadosHoje);
-  const atrasadosAnimado = useAnimatedNumber(atrasados);
+  const andamentoAnimado = useAnimatedNumber(andamento);
+  const fechadosAnimado = useAnimatedNumber(fechados);
 
   return (
     <div>
       {/* CABEÇALHO */}
       <div className="page-header">
         <h2>Dashboard</h2>
-        <p className="page-subtitle">
-          Visão geral dos chamados de TI
-        </p>
+        <p className="page-subtitle">Visão geral dos chamados</p>
       </div>
 
       {/* VISÃO GERAL */}
@@ -121,50 +68,14 @@ export default function Inicio() {
         </div>
 
         <div className="dashboard-card atendimento">
-          <span>Em Atendimento</span>
-          <strong>{atendimentoAnimado}</strong>
+          <span>Em andamento</span>
+          <strong>{andamentoAnimado}</strong>
         </div>
 
         <div className="dashboard-card concluido">
-          <span>Concluídos</span>
-          <strong>{concluidosAnimado}</strong>
+          <span>Fechados</span>
+          <strong>{fechadosAnimado}</strong>
         </div>
-      </div>
-
-      {/* HOJE */}
-      <div className="dashboard">
-        <div className="dashboard-card total">
-          <span>Criados hoje</span>
-          <strong>{criadosHojeAnimado}</strong>
-        </div>
-
-        <div className="dashboard-card concluido">
-          <span>Fechados hoje</span>
-          <strong>{fechadosHojeAnimado}</strong>
-        </div>
-
-        <div className="dashboard-card alerta">
-          <span>SLA estourado</span>
-          <strong>{atrasadosAnimado}</strong>
-        </div>
-      </div>
-
-      {/* ATENÇÃO */}
-      <div className="dashboard-atencao">
-        <h3>Chamados que exigem atenção</h3>
-
-        {chamadosAtencao.length === 0 && (
-          <p>Nenhum chamado crítico no momento.</p>
-        )}
-
-        {chamadosAtencao.map(c => (
-          <div key={c.id} className="atencao-item">
-            <strong>{c.demanda}</strong>
-            <span>
-              {c.prioridade} · {c.status}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );

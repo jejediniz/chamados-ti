@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { PERFIS } from "../config/perfis";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -7,7 +7,6 @@ const STORAGE_KEY = "@chamados-ti:auth";
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
-  const [empresaAtiva, setEmpresaAtiva] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
   /**
@@ -18,9 +17,8 @@ export function AuthProvider({ children }) {
 
     if (dadosSalvos) {
       try {
-        const { usuario, empresaAtiva } = JSON.parse(dadosSalvos);
+        const { usuario } = JSON.parse(dadosSalvos);
         setUsuario(usuario);
-        setEmpresaAtiva(empresaAtiva);
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -33,65 +31,55 @@ export function AuthProvider({ children }) {
    * Persiste sessão
    */
   useEffect(() => {
-    if (usuario && empresaAtiva) {
+    if (usuario) {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ usuario, empresaAtiva })
+        JSON.stringify({ usuario })
       );
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, [usuario, empresaAtiva]);
+  }, [usuario]);
 
   /**
-   * Login
+   * LOGIN REAL (BACKEND)
    */
-  function login(email, senha) {
-    const empresaFake = {
-      id: 1,
-      nome: "Empresa Demo",
-      slug: "empresa-demo",
-    };
+  async function login(email, senha) {
+    setCarregando(true);
 
-    const perfil =
-      email === "admin@chamadosti.com"
-        ? PERFIS.ADMIN
-        : email.includes("tecnico")
-        ? PERFIS.TECNICO
-        : PERFIS.USUARIO;
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        senha,
+      });
 
-    const usuarioFake = {
-      id: 1,
-      nome:
-        perfil === PERFIS.ADMIN
-          ? "Administrador do Sistema"
-          : "Usuário Teste",
-      email,
-      perfil,
-      empresa: empresaFake,
-    };
+      const { token, usuario } = response.data;
 
-    setUsuario(usuarioFake);
-    setEmpresaAtiva(empresaFake);
+      // 🔑 salva o token para as próximas requisições
+      localStorage.setItem("token", token);
+
+      setUsuario(usuario);
+    } catch (error) {
+      alert("Email ou senha inválidos");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   /**
-   * Logout
+   * LOGOUT
    */
   function logout() {
+    localStorage.removeItem("token");
     setUsuario(null);
-    setEmpresaAtiva(null);
   }
 
   const estaAutenticado = Boolean(usuario);
-  const perfil = usuario?.perfil ?? null;
 
   return (
     <AuthContext.Provider
       value={{
         usuario,
-        perfil,
-        empresaAtiva,
         estaAutenticado,
         carregando,
         login,
