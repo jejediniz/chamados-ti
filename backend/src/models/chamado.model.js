@@ -26,6 +26,15 @@ const ChamadoModel = {
     return pool.query(query, [usuarioId])
   },
 
+  listarTodos: () => {
+    const query = `
+      SELECT *
+      FROM chamados
+      ORDER BY id DESC;
+    `
+    return pool.query(query)
+  },
+
   buscarPorId: (id, usuarioId) => {
     const query = `
       SELECT *
@@ -33,6 +42,15 @@ const ChamadoModel = {
       WHERE id = $1 AND usuario_id = $2;
     `
     return pool.query(query, [id, usuarioId])
+  },
+
+  buscarPorIdQualquer: (id) => {
+    const query = `
+      SELECT *
+      FROM chamados
+      WHERE id = $1;
+    `
+    return pool.query(query, [id])
   },
 
   atualizar: (id, dados, usuarioId) => {
@@ -57,6 +75,27 @@ const ChamadoModel = {
     ])
   },
 
+  atualizarQualquer: (id, dados) => {
+    const query = `
+      UPDATE chamados
+      SET
+        titulo = COALESCE($1, titulo),
+        descricao = COALESCE($2, descricao),
+        status = COALESCE($3, status),
+        prioridade = COALESCE($4, prioridade),
+        updated_at = NOW()
+      WHERE id = $5
+      RETURNING *;
+    `
+    return pool.query(query, [
+      dados.titulo,
+      dados.descricao,
+      dados.status,
+      dados.prioridade,
+      id
+    ])
+  },
+
   deletar: (id, usuarioId) => {
     const query = `
       DELETE FROM chamados
@@ -64,6 +103,15 @@ const ChamadoModel = {
       RETURNING id;
     `
     return pool.query(query, [id, usuarioId])
+  },
+
+  deletarQualquer: (id) => {
+    const query = `
+      DELETE FROM chamados
+      WHERE id = $1
+      RETURNING id;
+    `
+    return pool.query(query, [id])
   }
 }
 

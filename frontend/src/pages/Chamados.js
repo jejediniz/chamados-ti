@@ -3,7 +3,7 @@ import { useAuth } from "../contextos/authContext";
 import {
   listarChamados,
   criarChamado,
-  atualizarStatusChamado,
+  atualizarChamado,
   excluirChamado,
 } from "../services/chamadosApi";
 
@@ -15,7 +15,8 @@ const STATUS_LABEL = {
 
 export default function Chamados() {
   const { usuario } = useAuth();
-  const isAdmin = usuario?.perfil === "ADMIN";
+  const isAdmin = usuario?.admin === true;
+  const isTi = usuario?.tipo === "ti";
 
   const [chamados, setChamados] = useState([]);
   const [form, setForm] = useState({
@@ -44,7 +45,12 @@ export default function Chamados() {
     if (!form.titulo || !form.descricao) return;
 
     if (editandoId) {
-      await atualizarStatusChamado(editandoId, form.status || "aberto");
+      await atualizarChamado(editandoId, {
+        titulo: form.titulo,
+        descricao: form.descricao,
+        prioridade: form.prioridade,
+        status: form.status || "aberto",
+      });
     } else {
       await criarChamado(form);
     }
@@ -71,76 +77,125 @@ export default function Chamados() {
   }
 
   return (
-    <>
-      <h2>Chamados</h2>
+    <div>
+      <div className="page-header">
+        <h2>Gestão de Chamados</h2>
+        <p className="page-subtitle">
+          Visualize e gerencie chamados conforme sua permissão
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          name="titulo"
-          placeholder="Título"
-          value={form.titulo}
-          onChange={handleChange}
-        />
+      <div className="chamados-layout">
+        <form onSubmit={handleSubmit} className="form-card">
+          <div className="form-group">
+            <label>Título</label>
+            <input
+              name="titulo"
+              placeholder="Título"
+              value={form.titulo}
+              onChange={handleChange}
+            />
+          </div>
 
-        <textarea
-          name="descricao"
-          placeholder="Descrição"
-          value={form.descricao}
-          onChange={handleChange}
-        />
+          <div className="form-group">
+            <label>Descrição</label>
+            <textarea
+              name="descricao"
+              placeholder="Descrição"
+              value={form.descricao}
+              onChange={handleChange}
+            />
+          </div>
 
-        <select
-          name="prioridade"
-          value={form.prioridade}
-          onChange={handleChange}
-        >
-          <option value="baixa">Baixa</option>
-          <option value="media">Média</option>
-          <option value="alta">Alta</option>
-        </select>
+          <div className="form-group">
+            <label>Prioridade</label>
+            <select
+              name="prioridade"
+              value={form.prioridade}
+              onChange={handleChange}
+            >
+              <option value="baixa">Baixa</option>
+              <option value="media">Média</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
 
-        {editandoId && (
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-          >
-            <option value="aberto">Aberto</option>
-            <option value="em_andamento">Em andamento</option>
-            <option value="fechado">Fechado</option>
-          </select>
-        )}
+          {editandoId && (
+            <div className="form-group">
+              <label>Status</label>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+              >
+                <option value="aberto">Aberto</option>
+                <option value="em_andamento">Em andamento</option>
+                <option value="fechado">Fechado</option>
+              </select>
+            </div>
+          )}
 
-        <button type="submit">
-          {editandoId ? "Atualizar" : "Criar"}
-        </button>
-      </form>
+          <div className="form-actions">
+            <button type="submit" className="btn-acao btn-editar">
+              {editandoId ? "Atualizar" : "Criar"}
+            </button>
+          </div>
+        </form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Status</th>
-            <th>Título</th>
-            <th>Prioridade</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {chamados.map(c => (
-            <tr key={c.id}>
-              <td>{STATUS_LABEL[c.status]}</td>
-              <td>{c.titulo}</td>
-              <td>{c.prioridade}</td>
-              <td>
-                <button onClick={() => editarChamado(c)}>Editar</button>
-                {isAdmin && (
-                  <button onClick={() => remover(c.id)}>Excluir</button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
+        <div className="table-card">
+          <div className="table-header">
+            <strong>Chamados cadastrados</strong>
+          </div>
+          <table className="chamados-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Título</th>
+                <th>Prioridade</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {chamados.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    <span className={`status status-${c.status}`}>
+                      {STATUS_LABEL[c.status]}
+                    </span>
+                  </td>
+                  <td>{c.titulo}</td>
+                  <td>{c.prioridade}</td>
+                  <td>
+                    <div className="acoes">
+                      {isTi && (
+                        <button
+                          onClick={() => editarChamado(c)}
+                          className="btn-acao btn-editar"
+                        >
+                          Editar
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => remover(c.id)}
+                          className="btn-acao btn-excluir"
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {chamados.length === 0 && (
+                <tr>
+                  <td colSpan="4">Nenhum chamado encontrado.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }

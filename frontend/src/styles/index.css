@@ -319,6 +319,7 @@ body {
 
 .status-aberto { background: #e3f2fd; color: #0d47a1; }
 .status-em_atendimento { background: #fff8e1; color: #ff8f00; }
+.status-em_andamento { background: #fff8e1; color: #ff8f00; }
 .status-aguardando_cliente { background: #ede9fe; color: #5b21b6; }
 .status-aguardando_terceiro { background: #e0f2fe; color: #075985; }
 .status-resolvido { background: #e8f5e9; color: #2e7d32; }

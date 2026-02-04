@@ -29,17 +29,21 @@ exports.create = async (dados, usuarioId) => {
   return result.rows[0]
 }
 
-exports.list = async (usuarioId) => {
-  const result = await ChamadoModel.listarPorUsuario(usuarioId)
+exports.list = async (usuarioId, { listarTodos = false } = {}) => {
+  const result = listarTodos
+    ? await ChamadoModel.listarTodos()
+    : await ChamadoModel.listarPorUsuario(usuarioId)
   return result.rows
 }
 
-exports.findById = async (id, usuarioId) => {
-  const result = await ChamadoModel.buscarPorId(id, usuarioId)
+exports.findById = async (id, usuarioId, { buscarQualquer = false } = {}) => {
+  const result = buscarQualquer
+    ? await ChamadoModel.buscarPorIdQualquer(id)
+    : await ChamadoModel.buscarPorId(id, usuarioId)
   return result.rows[0] || null
 }
 
-exports.update = async (id, dados, usuarioId) => {
+exports.update = async (id, dados, usuarioId, { atualizarQualquer = false } = {}) => {
   const { status, prioridade } = dados
 
   if (status && !STATUS_VALIDOS.includes(status)) {
@@ -50,11 +54,15 @@ exports.update = async (id, dados, usuarioId) => {
     throw new Error('Prioridade inválida')
   }
 
-  const result = await ChamadoModel.atualizar(id, dados, usuarioId)
+  const result = atualizarQualquer
+    ? await ChamadoModel.atualizarQualquer(id, dados)
+    : await ChamadoModel.atualizar(id, dados, usuarioId)
   return result.rows[0] || null
 }
 
-exports.remove = async (id, usuarioId) => {
-  const result = await ChamadoModel.deletar(id, usuarioId)
+exports.remove = async (id, usuarioId, { deletarQualquer = false } = {}) => {
+  const result = deletarQualquer
+    ? await ChamadoModel.deletarQualquer(id)
+    : await ChamadoModel.deletar(id, usuarioId)
   return result.rowCount > 0
 }

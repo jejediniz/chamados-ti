@@ -3,10 +3,22 @@ const jwt = require('jsonwebtoken')
 const pool = require('../config/database')
 
 exports.register = async (req, res) => {
-  const { nome, email, senha } = req.body
+  const { nome, email, senha, tipo, admin, ativo } = req.body
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ erro: 'Nome, email e senha são obrigatórios' })
+  }
+
+  if (tipo && !['comum', 'ti'].includes(tipo)) {
+    return res.status(400).json({ erro: 'Tipo de usuário inválido' })
+  }
+
+  if (admin !== undefined && typeof admin !== 'boolean') {
+    return res.status(400).json({ erro: 'Admin deve ser boolean' })
+  }
+
+  if (ativo !== undefined && typeof ativo !== 'boolean') {
+    return res.status(400).json({ erro: 'Ativo deve ser boolean' })
   }
 
   try {
@@ -22,8 +34,8 @@ exports.register = async (req, res) => {
     const senha_hash = await bcrypt.hash(senha, 10)
 
     const result = await pool.query(
-      'INSERT INTO usuarios (nome, email, senha_hash) VALUES ($1, $2, $3) RETURNING id, nome, email, tipo, admin, ativo',
-      [nome, email, senha_hash]
+      'INSERT INTO usuarios (nome, email, senha_hash, tipo, admin, ativo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, email, tipo, admin, ativo',
+      [nome, email, senha_hash, tipo ?? 'comum', admin ?? false, ativo ?? true]
     )
 
     const usuario = result.rows[0]

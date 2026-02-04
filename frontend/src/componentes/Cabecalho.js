@@ -2,7 +2,10 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../contextos/authContext";
 
 export default function Cabecalho() {
-  const { estaAutenticado, logout } = useAuth();
+  const { estaAutenticado, logout, usuario } = useAuth();
+
+  const isAdmin = usuario?.admin === true;
+  const isTi = usuario?.tipo === "ti";
 
   const linkClass = ({ isActive }) =>
     isActive ? "nav-btn active" : "nav-btn";
@@ -18,9 +21,11 @@ export default function Cabecalho() {
           Dashboard
         </NavLink>
 
-        <NavLink to="/chamados" className={linkClass}>
-          Gestão de Chamados
-        </NavLink>
+        {(isTi || isAdmin) && (
+          <NavLink to="/chamados" className={linkClass}>
+            Gestão de Chamados
+          </NavLink>
+        )}
 
         <NavLink to="/abrir-chamado" className={linkClass}>
           Abrir Chamado
@@ -29,6 +34,12 @@ export default function Cabecalho() {
         <NavLink to="/meus-chamados" className={linkClass}>
           Meus Chamados
         </NavLink>
+
+        {isAdmin && (
+          <NavLink to="/usuarios" className={linkClass}>
+            Usuários
+          </NavLink>
+        )}
 
         <button onClick={logout} className="nav-btn logout">
           Sair

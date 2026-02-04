@@ -24,9 +24,12 @@ export async function criarChamado(dados) {
 /**
  * ATUALIZAR STATUS
  */
-export async function atualizarStatusChamado(id, status) {
+export async function atualizarChamado(id, dados) {
   const response = await api.put(`/chamados/${id}`, {
-    status,
+    titulo: dados.titulo,
+    descricao: dados.descricao,
+    prioridade: dados.prioridade,
+    status: dados.status,
   });
 
   return response.data;

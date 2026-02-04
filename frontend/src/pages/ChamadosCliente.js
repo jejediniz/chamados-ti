@@ -1,18 +1,23 @@
+import { useAuth } from "../contextos/authContext";
 import { useChamados } from "../contextos/chamadosContext";
 
 const STATUS_LABEL = {
-  ABERTO: "Aberto",
-  EM_ANDAMENTO: "Em andamento",
-  AGUARDANDO_USUARIO: "Aguardando usuário",
-  RESOLVIDO: "Resolvido",
+  aberto: "Aberto",
+  em_andamento: "Em andamento",
+  fechado: "Fechado",
 };
 
 export default function ChamadosCliente() {
+  const { usuario } = useAuth();
   const { chamados, carregando } = useChamados();
 
   if (carregando) {
     return <p>Carregando chamados...</p>;
   }
+
+  const meusChamados = usuario?.id
+    ? chamados.filter((c) => c.usuario_id === usuario.id)
+    : [];
 
   return (
     <>
@@ -24,24 +29,28 @@ export default function ChamadosCliente() {
       </div>
 
       <div className="cliente-chamados">
-        {chamados.length === 0 && (
+        {meusChamados.length === 0 && (
           <p className="empty">Nenhum chamado registrado.</p>
         )}
 
-        {chamados.map((c) => (
+        {meusChamados.map((c) => (
           <div key={c.id} className="cliente-card">
             <div className="cliente-topo">
-              <span className={`status status-${c.status.toLowerCase()}`}>
-                {STATUS_LABEL[c.status]}
+              <span className={`status status-${c.status}`}>
+                {STATUS_LABEL[c.status] || c.status}
               </span>
-              <span className="data">{c.data}</span>
+              {c.created_at && (
+                <span className="data">
+                  {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                </span>
+              )}
             </div>
 
-            <h4 className="demanda">{c.demanda}</h4>
+            <h4 className="demanda">{c.titulo}</h4>
 
-            {c.obs && (
+            {c.descricao && (
               <p className="obs">
-                <strong>Observação:</strong> {c.obs}
+                <strong>Descrição:</strong> {c.descricao}
               </p>
             )}
           </div>

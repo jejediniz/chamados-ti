@@ -13,7 +13,8 @@ exports.create = async (req, res) => {
 exports.list = async (req, res) => {
   try {
     const usuarioId = req.user.id
-    const chamados = await chamadosService.list(usuarioId)
+    const listarTodos = req.user.tipo === 'ti' || req.user.admin === true
+    const chamados = await chamadosService.list(usuarioId, { listarTodos })
     res.json(chamados)
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao listar chamados' })
@@ -23,7 +24,8 @@ exports.list = async (req, res) => {
 exports.findById = async (req, res) => {
   try {
     const usuarioId = req.user.id
-    const chamado = await chamadosService.findById(req.params.id, usuarioId)
+    const buscarQualquer = req.user.tipo === 'ti' || req.user.admin === true
+    const chamado = await chamadosService.findById(req.params.id, usuarioId, { buscarQualquer })
 
     if (!chamado) {
       return res.status(404).json({ erro: 'Chamado não encontrado' })
@@ -38,10 +40,12 @@ exports.findById = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const usuarioId = req.user.id
+    const atualizarQualquer = req.user.tipo === 'ti'
     const chamado = await chamadosService.update(
       req.params.id,
       req.body,
-      usuarioId
+      usuarioId,
+      { atualizarQualquer }
     )
 
     if (!chamado) {
@@ -57,7 +61,8 @@ exports.update = async (req, res) => {
 exports.remove = async (req, res) => {
   try {
     const usuarioId = req.user.id
-    const removido = await chamadosService.remove(req.params.id, usuarioId)
+    const deletarQualquer = req.user.admin === true
+    const removido = await chamadosService.remove(req.params.id, usuarioId, { deletarQualquer })
 
     if (!removido) {
       return res.status(404).json({ erro: 'Chamado não encontrado' })

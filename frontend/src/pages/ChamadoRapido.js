@@ -14,10 +14,9 @@ export default function ChamadoRapido() {
   const { criarChamado } = useChamados();
 
   const [form, setForm] = useState({
-    demanda: "",
-    responsavel: "",
-    setor: "",
-    obs: "",
+    titulo: "",
+    descricao: "",
+    prioridade: "media",
   });
 
   function handleChange(e) {
@@ -27,24 +26,18 @@ export default function ChamadoRapido() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!form.demanda || !form.responsavel || !form.setor) {
+    if (!form.titulo || !form.descricao) {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
 
     await criarChamado({
-      responsavel: form.responsavel,
-      demanda: form.demanda,
-      obs: `${form.setor} - ${form.obs}`,
-      status: "ABERTO",
-      criadoEm: new Date().toISOString(),
-
-      // 🔒 CAMPOS OBRIGATÓRIOS
-      historico: [],
-      comentarios: [],
+      titulo: form.titulo,
+      descricao: form.descricao,
+      prioridade: form.prioridade,
     });
 
-    setForm({ demanda: "", responsavel: "", setor: "", obs: "" });
+    setForm({ titulo: "", descricao: "", prioridade: "media" });
     alert("Chamado aberto com sucesso!");
   }
 
@@ -57,42 +50,35 @@ export default function ChamadoRapido() {
         <form onSubmit={handleSubmit} className="open-form">
           <div>
             <label>Qual é o problema?</label>
-            <select name="demanda" value={form.demanda} onChange={handleChange}>
+            <select name="titulo" value={form.titulo} onChange={handleChange}>
               <option value="">Selecione</option>
               {DEMANDAS_PADRAO.map((d, i) => (
-                <option key={i}>{d}</option>
+                <option key={i} value={d}>{d}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label>Seu nome</label>
-            <input
-              name="responsavel"
-              value={form.responsavel}
-              onChange={handleChange}
-              placeholder="Informe seu nome"
-            />
-          </div>
-
-          <div>
-            <label>Setor</label>
-            <input
-              name="setor"
-              value={form.setor}
-              onChange={handleChange}
-              placeholder="Ex: Financeiro, RH..."
-            />
-          </div>
-
-          <div>
-            <label>Observações (opcional)</label>
+            <label>Descrição</label>
             <textarea
-              name="obs"
-              value={form.obs}
+              name="descricao"
+              value={form.descricao}
               onChange={handleChange}
-              placeholder="Descreva mais detalhes"
+              placeholder="Descreva o problema com detalhes"
             />
+          </div>
+
+          <div>
+            <label>Prioridade</label>
+            <select
+              name="prioridade"
+              value={form.prioridade}
+              onChange={handleChange}
+            >
+              <option value="baixa">Baixa</option>
+              <option value="media">Média</option>
+              <option value="alta">Alta</option>
+            </select>
           </div>
 
           <div className="form-actions center">

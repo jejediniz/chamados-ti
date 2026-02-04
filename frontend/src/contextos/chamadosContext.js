@@ -1,14 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./authContext";
 import {
   listarChamados,
   criarChamado,
-  atualizarStatusChamado,
+  atualizarChamado,
   excluirChamado,
 } from "../services/chamadosApi";
 
 const ChamadosContext = createContext(null);
 
 export function ChamadosProvider({ children }) {
+  const { usuario } = useAuth();
   const [chamados, setChamados] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [chamadoEmEdicao, setChamadoEmEdicao] = useState(null);
@@ -24,16 +26,20 @@ export function ChamadosProvider({ children }) {
   }
 
   useEffect(() => {
-    carregarChamados();
-  }, []);
+    if (usuario) {
+      carregarChamados();
+    } else {
+      setChamados([]);
+    }
+  }, [usuario]);
 
   async function criarChamadoContext(dados) {
     await criarChamado(dados);
     carregarChamados();
   }
 
-  async function atualizarChamadoContext(id, status) {
-    await atualizarStatusChamado(id, status);
+  async function atualizarChamadoContext(id, dados) {
+    await atualizarChamado(id, dados);
     carregarChamados();
   }
 
