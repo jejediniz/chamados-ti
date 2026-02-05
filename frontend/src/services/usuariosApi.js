@@ -2,7 +2,7 @@ import api from "./api";
 
 export async function listarUsuarios() {
   const response = await api.get("/users");
-  return response.data;
+  return response.data.data;
 }
 
 export async function criarUsuario(dados) {
@@ -15,5 +15,10 @@ export async function criarUsuario(dados) {
     ativo: dados.ativo,
   });
 
-  return response.data;
+  return response.data.data;
+}
+
+export async function listarTecnicos() {
+  const response = await api.get("/users/tecnicos");
+  return response.data.data;
 }

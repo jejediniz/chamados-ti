@@ -6,6 +6,7 @@ import {
   atualizarChamado,
   excluirChamado,
 } from "../services/chamadosApi";
+import { listarTecnicos } from "../services/usuariosApi";
 
 const STATUS_LABEL = {
   aberto: "Aberto",
@@ -19,20 +20,53 @@ export default function Chamados() {
   const isTi = usuario?.tipo === "ti";
 
   const [chamados, setChamados] = useState([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState(null);
+  const [pagina, setPagina] = useState(1);
+  const [limite, setLimite] = useState(10);
+  const [meta, setMeta] = useState(null);
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
     prioridade: "media",
+    tecnicoId: "",
   });
   const [editandoId, setEditandoId] = useState(null);
+  const [tecnicos, setTecnicos] = useState([]);
 
-  async function carregarChamados() {
-    const data = await listarChamados();
-    setChamados(data);
+  async function carregarChamados(novaPagina = 1) {
+    setCarregando(true);
+    setErro(null);
+    try {
+      const { items, meta: metaApi } = await listarChamados({
+        page: novaPagina,
+        limit: limite,
+      });
+      setChamados(items);
+      setMeta(metaApi);
+      setPagina(novaPagina);
+    } catch (error) {
+      setErro(error.message || "Erro ao carregar chamados");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   useEffect(() => {
-    carregarChamados();
+    carregarChamados(1);
+  }, [limite]);
+
+  useEffect(() => {
+    async function buscarTecnicos() {
+      try {
+        const data = await listarTecnicos();
+        setTecnicos(data.filter((u) => u.tipo === "ti"));
+      } catch {
+        //
+      }
+    }
+
+    buscarTecnicos();
   }, []);
 
   function handleChange(e) {
@@ -44,20 +78,29 @@ export default function Chamados() {
 
     if (!form.titulo || !form.descricao) return;
 
-    if (editandoId) {
-      await atualizarChamado(editandoId, {
-        titulo: form.titulo,
-        descricao: form.descricao,
-        prioridade: form.prioridade,
-        status: form.status || "aberto",
-      });
-    } else {
-      await criarChamado(form);
+    setErro(null);
+    try {
+    const payload = {
+      titulo: form.titulo,
+      descricao: form.descricao,
+      prioridade: form.prioridade,
+      tecnicoId: form.tecnicoId || undefined,
     }
 
-    setForm({ titulo: "", descricao: "", prioridade: "media" });
+    if (editandoId) {
+      payload.status = form.status || "aberto";
+      await atualizarChamado(editandoId, payload);
+    } else {
+      await criarChamado(payload);
+    }
+    } catch (error) {
+      setErro(error.message || "Erro ao salvar chamado");
+      return;
+    }
+
+    setForm({ titulo: "", descricao: "", prioridade: "media", tecnicoId: "" });
     setEditandoId(null);
-    carregarChamados();
+    carregarChamados(pagina);
   }
 
   function editarChamado(chamado) {
@@ -67,13 +110,35 @@ export default function Chamados() {
       descricao: chamado.descricao,
       prioridade: chamado.prioridade,
       status: chamado.status,
+      tecnicoId: chamado.tecnico?.id || "",
     });
   }
 
   async function remover(id) {
     if (!window.confirm("Deseja excluir este chamado?")) return;
-    await excluirChamado(id);
-    carregarChamados();
+    setErro(null);
+      try {
+        await excluirChamado(id);
+        carregarChamados(pagina);
+    } catch (error) {
+      setErro(error.message || "Erro ao excluir chamado");
+    }
+  }
+
+  async function assumirChamado(id) {
+    setErro(null);
+    try {
+      await atualizarChamado(id, { tecnicoId: usuario.id });
+      carregarChamados(pagina);
+    } catch (error) {
+      setErro(error.message || "Erro ao assumir chamado");
+    }
+  }
+
+  function irParaPagina(novaPagina) {
+    if (novaPagina < 1) return;
+    if (meta?.totalPages && novaPagina > meta.totalPages) return;
+    carregarChamados(novaPagina);
   }
 
   return (
@@ -87,6 +152,8 @@ export default function Chamados() {
 
       <div className="chamados-layout">
         <form onSubmit={handleSubmit} className="form-card">
+          {erro && <div className="alert alert-error">{erro}</div>}
+
           <div className="form-group">
             <label>Título</label>
             <input
@@ -120,6 +187,22 @@ export default function Chamados() {
             </select>
           </div>
 
+          <div className="form-group">
+            <label>Técnico responsável</label>
+            <select
+              name="tecnicoId"
+              value={form.tecnicoId}
+              onChange={handleChange}
+            >
+              <option value="">Sem atribuição</option>
+              {tecnicos.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {editandoId && (
             <div className="form-group">
               <label>Status</label>
@@ -146,16 +229,39 @@ export default function Chamados() {
           <div className="table-header">
             <strong>Chamados cadastrados</strong>
           </div>
+
+          <div className="table-actions">
+            <label>
+              Itens por página
+              <select
+                value={limite}
+                onChange={(e) => setLimite(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </label>
+          </div>
+
           <table className="chamados-table">
             <thead>
               <tr>
                 <th>Status</th>
                 <th>Título</th>
+                <th>Solicitante</th>
+                <th>Técnico</th>
                 <th>Prioridade</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
+              {carregando && (
+                <tr>
+                  <td colSpan="6">Carregando...</td>
+                </tr>
+              )}
+
               {chamados.map((c) => (
                 <tr key={c.id}>
                   <td>
@@ -164,9 +270,29 @@ export default function Chamados() {
                     </span>
                   </td>
                   <td>{c.titulo}</td>
+                  <td>
+                    {c.solicitante?.nome || "—"}
+                    {c.solicitante?.tipo && (
+                      <div className="secondary-text">{c.solicitante.tipo}</div>
+                    )}
+                  </td>
+                  <td>
+                    {c.tecnico?.nome || "—"}
+                    {c.tecnico?.email && (
+                      <div className="secondary-text">{c.tecnico.email}</div>
+                    )}
+                  </td>
                   <td>{c.prioridade}</td>
                   <td>
                     <div className="acoes">
+                      {isTi && (
+                        <button
+                          onClick={() => assumirChamado(c.id)}
+                          className="btn-acao btn-editar"
+                        >
+                          Assumir
+                        </button>
+                      )}
                       {isTi && (
                         <button
                           onClick={() => editarChamado(c)}
@@ -187,13 +313,38 @@ export default function Chamados() {
                   </td>
                 </tr>
               ))}
-              {chamados.length === 0 && (
+
+              {!carregando && chamados.length === 0 && (
                 <tr>
-                  <td colSpan="4">Nenhum chamado encontrado.</td>
+                  <td colSpan="6">Nenhum chamado encontrado.</td>
                 </tr>
               )}
             </tbody>
           </table>
+
+          {meta && meta.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="btn-acao"
+                onClick={() => irParaPagina(pagina - 1)}
+                disabled={pagina <= 1 || carregando}
+              >
+                Anterior
+              </button>
+
+              <span>
+                Página {pagina} de {meta.totalPages}
+              </span>
+
+              <button
+                className="btn-acao"
+                onClick={() => irParaPagina(pagina + 1)}
+                disabled={pagina >= meta.totalPages || carregando}
+              >
+                Próxima
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

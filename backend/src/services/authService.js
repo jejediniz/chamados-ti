@@ -1,44 +1,70 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const pool = require('../config/database')
+const AppError = require('../utils/AppError')
+const userRepository = require('../repositories/userRepository')
+const { getEnv } = require('../config/env')
 
-async function registrar({ nome, email, senha }) {
+const { jwtSecret, jwtExpiresIn } = getEnv()
+
+async function registrar({ nome, email, senha, tipo, admin, ativo }) {
+  const existente = await userRepository.findByEmail(email)
+
+  if (existente) {
+    throw new AppError('Email já cadastrado', 409)
+  }
+
   const senha_hash = await bcrypt.hash(senha, 10)
 
-  const query = `
-    INSERT INTO usuarios (nome, email, senha_hash)
-    VALUES ($1, $2, $3)
-    RETURNING id, nome, email
-  `
-  const values = [nome, email, senha_hash]
+  const usuario = await userRepository.create({
+    nome,
+    email,
+    senha_hash,
+    tipo: tipo ?? 'comum',
+    admin: admin ?? false,
+    ativo: ativo ?? true
+  })
 
-  const { rows } = await pool.query(query, values)
-  return rows[0]
+  const token = jwt.sign(
+    {
+      id: usuario.id,
+      tipo: usuario.tipo,
+      admin: usuario.admin
+    },
+    jwtSecret,
+    { expiresIn: jwtExpiresIn }
+  )
+
+  return {
+    token,
+    usuario
+  }
 }
 
 async function login({ email, senha }) {
-  const query = `
-    SELECT id, nome, email, senha_hash
-    FROM usuarios
-    WHERE email = $1 AND ativo = true
-  `
-  const { rows } = await pool.query(query, [email])
+  const usuario = await userRepository.findByEmail(email)
 
-  if (rows.length === 0) {
-    throw new Error('Credenciais inválidas')
+  if (!usuario) {
+    throw new AppError('Credenciais inválidas', 401)
   }
 
-  const usuario = rows[0]
+  if (!usuario.ativo) {
+    throw new AppError('Usuário inativo', 403)
+  }
+
   const senhaValida = await bcrypt.compare(senha, usuario.senha_hash)
 
   if (!senhaValida) {
-    throw new Error('Credenciais inválidas')
+    throw new AppError('Credenciais inválidas', 401)
   }
 
   const token = jwt.sign(
-    { id: usuario.id, email: usuario.email },
-    process.env.JWT_SECRET,
-    { expiresIn: '1d' }
+    {
+      id: usuario.id,
+      tipo: usuario.tipo,
+      admin: usuario.admin
+    },
+    jwtSecret,
+    { expiresIn: jwtExpiresIn }
   )
 
   return {
@@ -46,7 +72,10 @@ async function login({ email, senha }) {
     usuario: {
       id: usuario.id,
       nome: usuario.nome,
-      email: usuario.email
+      email: usuario.email,
+      tipo: usuario.tipo,
+      admin: usuario.admin,
+      ativo: usuario.ativo
     }
   }
 }

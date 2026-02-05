@@ -18,6 +18,9 @@ export default function ChamadoRapido() {
     descricao: "",
     prioridade: "media",
   });
+  const [erro, setErro] = useState(null);
+  const [sucesso, setSucesso] = useState(null);
+  const [carregando, setCarregando] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -27,18 +30,27 @@ export default function ChamadoRapido() {
     e.preventDefault();
 
     if (!form.titulo || !form.descricao) {
-      alert("Preencha todos os campos obrigatórios");
+      setErro("Preencha todos os campos obrigatórios");
       return;
     }
 
-    await criarChamado({
-      titulo: form.titulo,
-      descricao: form.descricao,
-      prioridade: form.prioridade,
-    });
+    setErro(null);
+    setSucesso(null);
+    setCarregando(true);
+    try {
+      await criarChamado({
+        titulo: form.titulo,
+        descricao: form.descricao,
+        prioridade: form.prioridade,
+      });
 
-    setForm({ titulo: "", descricao: "", prioridade: "media" });
-    alert("Chamado aberto com sucesso!");
+      setForm({ titulo: "", descricao: "", prioridade: "media" });
+      setSucesso("Chamado aberto com sucesso!");
+    } catch (error) {
+      setErro(error.message || "Erro ao abrir chamado");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -46,6 +58,9 @@ export default function ChamadoRapido() {
       <div className="open-ticket">
         <h2>Abrir Chamado</h2>
         <p>Informe o problema para o suporte de TI</p>
+
+        {erro && <div className="alert alert-error">{erro}</div>}
+        {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
         <form onSubmit={handleSubmit} className="open-form">
           <div>
@@ -82,7 +97,9 @@ export default function ChamadoRapido() {
           </div>
 
           <div className="form-actions center">
-            <button className="btn-primary">Abrir Chamado</button>
+            <button className="btn-primary" disabled={carregando}>
+              {carregando ? "Enviando..." : "Abrir Chamado"}
+            </button>
           </div>
         </form>
       </div>

@@ -3,9 +3,12 @@ import api from "./api";
 /**
  * LISTAR CHAMADOS
  */
-export async function listarChamados() {
-  const response = await api.get("/chamados");
-  return response.data;
+export async function listarChamados(params = {}) {
+  const response = await api.get("/chamados", { params });
+  return {
+    items: response.data.data,
+    meta: response.data.meta,
+  };
 }
 
 /**
@@ -18,7 +21,7 @@ export async function criarChamado(dados) {
     prioridade: dados.prioridade?.toLowerCase() || "media",
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -32,7 +35,7 @@ export async function atualizarChamado(id, dados) {
     status: dados.status,
   });
 
-  return response.data;
+  return response.data.data;
 }
 
 /**

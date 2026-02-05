@@ -14,12 +14,16 @@ export function ChamadosProvider({ children }) {
   const [chamados, setChamados] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [chamadoEmEdicao, setChamadoEmEdicao] = useState(null);
+  const [erro, setErro] = useState(null);
 
   async function carregarChamados() {
     setCarregando(true);
+    setErro(null);
     try {
-      const data = await listarChamados();
-      setChamados(data);
+      const { items } = await listarChamados({ page: 1, limit: 200 });
+      setChamados(items);
+    } catch (error) {
+      setErro(error.message || "Erro ao carregar chamados");
     } finally {
       setCarregando(false);
     }
@@ -34,16 +38,19 @@ export function ChamadosProvider({ children }) {
   }, [usuario]);
 
   async function criarChamadoContext(dados) {
+    setErro(null);
     await criarChamado(dados);
     carregarChamados();
   }
 
   async function atualizarChamadoContext(id, dados) {
+    setErro(null);
     await atualizarChamado(id, dados);
     carregarChamados();
   }
 
   async function excluirChamadoContext(id) {
+    setErro(null);
     await excluirChamado(id);
     carregarChamados();
   }
@@ -53,6 +60,7 @@ export function ChamadosProvider({ children }) {
       value={{
         chamados,
         carregando,
+        erro,
         chamadoEmEdicao,
         setChamadoEmEdicao,
         criarChamado: criarChamadoContext,

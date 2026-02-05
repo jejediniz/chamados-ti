@@ -1,19 +1,27 @@
 const jwt = require('jsonwebtoken')
+const AppError = require('../utils/AppError')
+const { getEnv } = require('../config/env')
+
+const { jwtSecret } = getEnv()
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization
 
   if (!authHeader) {
-    return res.status(401).json({ erro: 'Token não informado' })
+    return next(new AppError('Token não informado', 401))
   }
 
-  const [, token] = authHeader.split(' ')
+  const [scheme, token] = authHeader.split(' ')
+
+  if (scheme !== 'Bearer' || !token) {
+    return next(new AppError('Token inválido', 401))
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, jwtSecret)
 
     if (!decoded.id) {
-      return res.status(401).json({ erro: 'Token inválido' })
+      return next(new AppError('Token inválido', 401))
     }
 
     req.user = {
@@ -22,9 +30,9 @@ function authMiddleware(req, res, next) {
       admin: decoded.admin
     }
 
-    next()
+    return next()
   } catch (err) {
-    return res.status(401).json({ erro: 'Token inválido ou expirado' })
+    return next(new AppError('Token inválido ou expirado', 401))
   }
 }
 

@@ -1,26 +1,28 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import api from "../services/api";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import api, { setUnauthorizedHandler } from "../services/api";
 
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = "@chamados-ti:auth";
+const TOKEN_KEY = "token";
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
   /**
    * Recupera sessão salva
    */
   useEffect(() => {
-    const dadosSalvos = localStorage.getItem(STORAGE_KEY);
+    const dadosSalvos = sessionStorage.getItem(STORAGE_KEY);
 
     if (dadosSalvos) {
       try {
         const { usuario } = JSON.parse(dadosSalvos);
         setUsuario(usuario);
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(STORAGE_KEY);
       }
     }
 
@@ -32,12 +34,12 @@ export function AuthProvider({ children }) {
    */
   useEffect(() => {
     if (usuario) {
-      localStorage.setItem(
+      sessionStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({ usuario })
       );
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
     }
   }, [usuario]);
 
@@ -46,6 +48,7 @@ export function AuthProvider({ children }) {
    */
   async function login(email, senha) {
     setCarregando(true);
+    setErro(null);
 
     try {
       const response = await api.post("/auth/login", {
@@ -53,14 +56,16 @@ export function AuthProvider({ children }) {
         senha,
       });
 
-      const { token, usuario } = response.data;
+      const { token, usuario } = response.data.data;
 
       // 🔑 salva o token para as próximas requisições
-      localStorage.setItem("token", token);
+      sessionStorage.setItem(TOKEN_KEY, token);
 
       setUsuario(usuario);
+      return true;
     } catch (error) {
-      alert("Email ou senha inválidos");
+      setErro(error.message || "Email ou senha inválidos");
+      return false;
     } finally {
       setCarregando(false);
     }
@@ -69,10 +74,14 @@ export function AuthProvider({ children }) {
   /**
    * LOGOUT
    */
-  function logout() {
-    localStorage.removeItem("token");
+  const logout = useCallback(() => {
+    sessionStorage.removeItem(TOKEN_KEY);
     setUsuario(null);
-  }
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => logout());
+  }, [logout]);
 
   const estaAutenticado = Boolean(usuario);
 
@@ -82,6 +91,7 @@ export function AuthProvider({ children }) {
         usuario,
         estaAutenticado,
         carregando,
+        erro,
         login,
         logout,
       }}

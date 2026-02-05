@@ -3,24 +3,26 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contextos/authContext";
 
 export default function Login() {
-  const { login, estaAutenticado, carregando } = useAuth();
+  const { login, estaAutenticado, carregando, erro } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [erroLocal, setErroLocal] = useState(null);
 
   const from = location.state?.from?.pathname || "/";
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     if (!email || !senha) {
-      alert("Informe email e senha");
+      setErroLocal("Informe email e senha");
       return;
     }
 
-    login(email, senha);
+    setErroLocal(null);
+    await login(email, senha);
   }
 
   useEffect(() => {
@@ -29,7 +31,13 @@ export default function Login() {
     }
   }, [estaAutenticado, carregando, navigate, from]);
 
-  if (carregando) return null;
+  if (carregando && !estaAutenticado) {
+    return (
+      <div className="center-page">
+        <div className="loading">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -43,6 +51,9 @@ export default function Login() {
         <div className="auth-card">
           <h2>Login</h2>
           <p>Informe suas credenciais para acessar o sistema</p>
+
+          {erroLocal && <div className="alert alert-error">{erroLocal}</div>}
+          {erro && <div className="alert alert-error">{erro}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div>
@@ -66,7 +77,9 @@ export default function Login() {
             </div>
 
             <div className="auth-actions">
-              <button type="submit">Entrar</button>
+              <button type="submit" disabled={carregando}>
+                {carregando ? "Entrando..." : "Entrar"}
+              </button>
             </div>
           </form>
         </div>

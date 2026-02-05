@@ -2,17 +2,21 @@ require('dotenv').config()
 
 const app = require('./src/app')
 const pool = require('./src/config/database')
+const logger = require('./src/utils/logger')
+const { validateEnv, getEnv } = require('./src/config/env')
 
-const PORT = process.env.PORT || 3001
+validateEnv()
+
+const { port } = getEnv()
 
 pool.query('SELECT NOW()')
   .then(result => {
-    console.log('Banco conectado:', result.rows[0])
+    logger.info('Banco conectado', { timestamp: result.rows[0]?.now })
   })
   .catch(err => {
-    console.error('Erro ao conectar no banco:', err)
+    logger.error('Erro ao conectar no banco', { message: err.message })
   })
 
-app.listen(PORT, () => {
-  console.log(`API rodando na porta ${PORT}`)
+app.listen(port, () => {
+  logger.info('API rodando', { port })
 })

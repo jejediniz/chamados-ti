@@ -4,6 +4,8 @@ import { listarUsuarios, criarUsuario } from "../services/usuariosApi";
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState(null);
+  const [sucesso, setSucesso] = useState(null);
   const [form, setForm] = useState({
     nome: "",
     email: "",
@@ -15,9 +17,12 @@ export default function Usuarios() {
 
   async function carregarUsuarios() {
     setCarregando(true);
+    setErro(null);
     try {
       const data = await listarUsuarios();
       setUsuarios(data);
+    } catch (error) {
+      setErro(error.message || "Erro ao carregar usuários");
     } finally {
       setCarregando(false);
     }
@@ -39,20 +44,27 @@ export default function Usuarios() {
     e.preventDefault();
 
     if (!form.nome || !form.email || !form.senha) {
-      alert("Nome, email e senha são obrigatórios");
+      setErro("Nome, email e senha são obrigatórios");
       return;
     }
 
-    await criarUsuario(form);
-    setForm({
-      nome: "",
-      email: "",
-      senha: "",
-      tipo: "comum",
-      admin: false,
-      ativo: true,
-    });
-    carregarUsuarios();
+    setErro(null);
+    setSucesso(null);
+    try {
+      await criarUsuario(form);
+      setForm({
+        nome: "",
+        email: "",
+        senha: "",
+        tipo: "comum",
+        admin: false,
+        ativo: true,
+      });
+      setSucesso("Usuário criado com sucesso");
+      carregarUsuarios();
+    } catch (error) {
+      setErro(error.message || "Erro ao criar usuário");
+    }
   }
 
   return (
@@ -64,6 +76,8 @@ export default function Usuarios() {
 
       <div className="chamados-layout">
         <form onSubmit={handleSubmit} className="form-card">
+          {erro && <div className="alert alert-error">{erro}</div>}
+          {sucesso && <div className="alert alert-success">{sucesso}</div>}
           <div className="form-group">
             <label>Nome</label>
             <input

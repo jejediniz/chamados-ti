@@ -1,101 +1,85 @@
 const bcrypt = require('bcrypt')
-const pool = require('../config/database')
+const AppError = require('../utils/AppError')
+const userRepository = require('../repositories/userRepository')
+const logger = require('../utils/logger')
 
 exports.list = async () => {
-  const result = await pool.query(
-    'SELECT id, nome, email, tipo, admin, ativo FROM usuarios ORDER BY id DESC'
-  )
-  return result.rows
+  return userRepository.list()
+}
+
+exports.listTecnicos = async () => {
+  return userRepository.listByTipo('ti')
 }
 
 exports.findById = async (id) => {
-  const result = await pool.query(
-    'SELECT id, nome, email, tipo, admin, ativo FROM usuarios WHERE id = $1',
-    [id]
-  )
-  return result.rows[0]
+  return userRepository.findById(id)
 }
 
-const TIPOS_VALIDOS = ['comum', 'ti']
-
 exports.create = async ({ nome, email, senha, tipo, admin, ativo }) => {
-  if (!nome || !email || !senha) {
-    throw new Error('Nome, email e senha são obrigatórios')
-  }
+  const existente = await userRepository.findByEmail(email)
 
-  if (tipo && !TIPOS_VALIDOS.includes(tipo)) {
-    throw new Error('Tipo de usuário inválido')
-  }
-
-  if (admin !== undefined && typeof admin !== 'boolean') {
-    throw new Error('Admin deve ser boolean')
-  }
-
-  if (ativo !== undefined && typeof ativo !== 'boolean') {
-    throw new Error('Ativo deve ser boolean')
-  }
-
-  const existente = await pool.query('SELECT id FROM usuarios WHERE email = $1', [
-    email
-  ])
-
-  if (existente.rows.length > 0) {
-    throw new Error('Email já cadastrado')
+  if (existente) {
+    throw new AppError('Email já cadastrado', 409)
   }
 
   const senha_hash = await bcrypt.hash(senha, 10)
 
-  const result = await pool.query(
-    'INSERT INTO usuarios (nome, email, senha_hash, tipo, admin, ativo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, email, tipo, admin, ativo',
-    [nome, email, senha_hash, tipo ?? 'comum', admin ?? false, ativo ?? true]
-  )
+  const usuario = await userRepository.create({
+    nome,
+    email,
+    senha_hash,
+    tipo: tipo ?? 'comum',
+    admin: admin ?? false,
+    ativo: ativo ?? true
+  })
 
-  return result.rows[0]
+  logger.audit('usuario.criado', {
+    usuarioId: usuario.id
+  })
+
+  return usuario
 }
 
 exports.update = async (id, { nome, email, senha, tipo, admin, ativo }) => {
   let senha_hash = null
 
+  if (email) {
+    const existente = await userRepository.findByEmail(email)
+    if (existente && String(existente.id) !== String(id)) {
+      throw new AppError('Email já cadastrado', 409)
+    }
+  }
+
   if (senha) {
     senha_hash = await bcrypt.hash(senha, 10)
   }
 
-  if (tipo && !TIPOS_VALIDOS.includes(tipo)) {
-    throw new Error('Tipo de usuário inválido')
+  const usuario = await userRepository.update(id, {
+    nome,
+    email,
+    senha_hash,
+    tipo,
+    admin,
+    ativo
+  })
+
+  if (usuario) {
+    logger.audit('usuario.atualizado', {
+      usuarioId: usuario.id
+    })
   }
 
-  if (admin !== undefined && typeof admin !== 'boolean') {
-    throw new Error('Admin deve ser boolean')
-  }
-
-  if (ativo !== undefined && typeof ativo !== 'boolean') {
-    throw new Error('Ativo deve ser boolean')
-  }
-
-  const result = await pool.query(
-    `
-    UPDATE usuarios
-    SET
-      nome = COALESCE($1, nome),
-      email = COALESCE($2, email),
-      senha_hash = COALESCE($3, senha_hash),
-      tipo = COALESCE($4, tipo),
-      admin = COALESCE($5, admin),
-      ativo = COALESCE($6, ativo)
-    WHERE id = $7
-    RETURNING id, nome, email, tipo, admin, ativo
-    `,
-    [nome ?? null, email ?? null, senha_hash, tipo ?? null, admin ?? null, ativo ?? null, id]
-  )
-
-  return result.rows[0]
+  return usuario
 }
 
 exports.remove = async (id) => {
-  const result = await pool.query(
-    'DELETE FROM usuarios WHERE id = $1 RETURNING id',
-    [id]
-  )
+  const removido = await userRepository.remove(id)
 
-  return result.rows[0]
+  if (removido) {
+    logger.audit('usuario.removido', {
+      usuarioId: removido.id
+    })
+  }
+
+  return removido
 }

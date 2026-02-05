@@ -9,10 +9,14 @@ const STATUS_LABEL = {
 
 export default function ChamadosCliente() {
   const { usuario } = useAuth();
-  const { chamados, carregando } = useChamados();
+  const { chamados, carregando, erro } = useChamados();
 
   if (carregando) {
     return <p>Carregando chamados...</p>;
+  }
+
+  if (erro) {
+    return <p className="alert alert-error">{erro}</p>;
   }
 
   const meusChamados = usuario?.id
@@ -47,6 +51,20 @@ export default function ChamadosCliente() {
             </div>
 
             <h4 className="demanda">{c.titulo}</h4>
+
+            <div className="cliente-meta">
+              <span>
+                <strong>Solicitante:</strong> {c.solicitante?.nome || "—"}
+              </span>
+              {c.solicitante?.tipo && (
+                <span>
+                  <strong>Origem:</strong> {c.solicitante.tipo}
+                </span>
+              )}
+              <span>
+                <strong>Técnico:</strong> {c.tecnico?.nome || "Sem responsável"}
+              </span>
+            </div>
 
             {c.descricao && (
               <p className="obs">

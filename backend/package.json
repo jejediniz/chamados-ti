@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
+    "lint": "eslint \"src/**/*.js\" \"server.js\"",
     "start": "node server.js"
   },
   "keywords": [],
@@ -15,10 +16,12 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.18.0"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
     "nodemon": "^3.1.11"
   }
 }

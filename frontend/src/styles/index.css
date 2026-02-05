@@ -282,6 +282,24 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.table-actions select {
+  margin-left: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-family: inherit;
+}
+
 .chamados-table {
   width: 100%;
   border-collapse: collapse;
@@ -299,6 +317,12 @@ body {
   padding: 14px;
   font-size: 14px;
   border-bottom: 1px solid var(--border);
+}
+
+.secondary-text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 .chamados-table tbody tr:hover {
@@ -332,6 +356,15 @@ body {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
 }
 
 .btn-acao {
@@ -403,4 +436,48 @@ body {
   display: flex;
   justify-content: center;
   margin-top: 16px;
+}
+
+.cliente-meta {
+  margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cliente-meta span strong {
+  margin-right: 4px;
+  color: var(--text);
+}
+
+/* =========================
+   FEEDBACK
+========================= */
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: #fff1f2;
+  border: 1px solid #fda4af;
+  color: #be123c;
+}
+
+.alert-success {
+  background: #ecfdf3;
+  border: 1px solid #86efac;
+  color: #15803d;
+}
+
+.loading {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.06);
+  font-weight: 500;
 }

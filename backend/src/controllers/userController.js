@@ -1,66 +1,49 @@
 const userService = require('../services/userService')
+const asyncHandler = require('../utils/asyncHandler')
+const AppError = require('../utils/AppError')
+const { sendSuccess, sendCreated, sendNoContent } = require('../utils/response')
 
-exports.list = async (req, res) => {
-  try {
-    const usuarios = await userService.list()
-    res.json(usuarios)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ erro: 'Erro ao listar usuários' })
+exports.list = asyncHandler(async (req, res) => {
+  const usuarios = await userService.list()
+  return sendSuccess(res, usuarios, 'Usuários listados com sucesso')
+})
+
+exports.listTecnicos = asyncHandler(async (req, res) => {
+  const tecnicos = await userService.listTecnicos()
+  return sendSuccess(res, tecnicos, 'Técnicos listados com sucesso')
+})
+
+exports.findById = asyncHandler(async (req, res) => {
+  const usuario = await userService.findById(req.params.id)
+
+  if (!usuario) {
+    throw new AppError('Usuário não encontrado', 404)
   }
-}
 
-exports.findById = async (req, res) => {
-  try {
-    const usuario = await userService.findById(req.params.id)
+  return sendSuccess(res, usuario, 'Usuário encontrado')
+})
 
-    if (!usuario) {
-      return res.status(404).json({ erro: 'Usuário não encontrado' })
-    }
+exports.create = asyncHandler(async (req, res) => {
+  const usuario = await userService.create(req.body)
+  return sendCreated(res, usuario, 'Usuário criado com sucesso')
+})
 
-    res.json(usuario)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ erro: 'Erro ao buscar usuário' })
+exports.update = asyncHandler(async (req, res) => {
+  const usuario = await userService.update(req.params.id, req.body)
+
+  if (!usuario) {
+    throw new AppError('Usuário não encontrado', 404)
   }
-}
 
-exports.create = async (req, res) => {
-  try {
-    const usuario = await userService.create(req.body)
-    res.status(201).json(usuario)
-  } catch (error) {
-    console.error(error)
-    res.status(400).json({ erro: error.message })
+  return sendSuccess(res, usuario, 'Usuário atualizado com sucesso')
+})
+
+exports.remove = asyncHandler(async (req, res) => {
+  const removido = await userService.remove(req.params.id)
+
+  if (!removido) {
+    throw new AppError('Usuário não encontrado', 404)
   }
-}
 
-exports.update = async (req, res) => {
-  try {
-    const usuario = await userService.update(req.params.id, req.body)
-
-    if (!usuario) {
-      return res.status(404).json({ erro: 'Usuário não encontrado' })
-    }
-
-    res.json(usuario)
-  } catch (error) {
-    console.error(error)
-    res.status(400).json({ erro: error.message })
-  }
-}
-
-exports.remove = async (req, res) => {
-  try {
-    const removido = await userService.remove(req.params.id)
-
-    if (!removido) {
-      return res.status(404).json({ erro: 'Usuário não encontrado' })
-    }
-
-    res.status(204).send()
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ erro: 'Erro ao remover usuário' })
-  }
-}
+  return sendNoContent(res)
+})
