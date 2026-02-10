@@ -22,3 +22,8 @@ export async function listarTecnicos() {
   const response = await api.get("/users/tecnicos");
   return response.data.data;
 }
+
+export async function excluirUsuario(id) {
+  await api.delete(`/users/${id}`);
+  return true;
+}

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { listarUsuarios, criarUsuario } from "../services/usuariosApi";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { listarUsuarios, criarUsuario, excluirUsuario } from "../services/usuariosApi";
 import { Button, Input, Select } from "../components/ui";
 
 export default function Usuarios() {
@@ -7,6 +7,10 @@ export default function Usuarios() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
+  const [menuAbertoId, setMenuAbertoId] = useState(null);
+  const menuRef = useRef(null);
+  const menuButtonRefs = useRef({});
+  const menuItemRefs = useRef({});
   const [form, setForm] = useState({
     nome: "",
     email: "",
@@ -32,6 +36,46 @@ export default function Usuarios() {
   useEffect(() => {
     carregarUsuarios();
   }, []);
+
+  const fecharMenu = useCallback(() => {
+    const idAtual = menuAbertoId;
+    setMenuAbertoId(null);
+    if (idAtual && menuButtonRefs.current[idAtual]) {
+      menuButtonRefs.current[idAtual].focus();
+    }
+  }, [menuAbertoId]);
+
+  useEffect(() => {
+    if (!menuAbertoId) return;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        fecharMenu();
+      }
+    }
+
+    function handlePointerDown(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        fecharMenu();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    const primeiroItem = menuItemRefs.current[menuAbertoId];
+    if (primeiroItem) {
+      primeiroItem.focus();
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [menuAbertoId, fecharMenu]);
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -66,6 +110,23 @@ export default function Usuarios() {
     } catch (error) {
       setErro(error.message || "Erro ao criar usuário");
     }
+  }
+
+  async function handleExcluir(id) {
+    if (!window.confirm("Deseja excluir este usuário?")) return;
+    setErro(null);
+    setSucesso(null);
+    try {
+      await excluirUsuario(id);
+      setSucesso("Usuário excluído com sucesso");
+      carregarUsuarios();
+    } catch (error) {
+      setErro(error.message || "Erro ao excluir usuário");
+    }
+  }
+
+  function abrirMenu(id) {
+    setMenuAbertoId((atual) => (atual === id ? null : id));
   }
 
   return (
@@ -152,28 +213,80 @@ export default function Usuarios() {
                 <th>Tipo</th>
                 <th>Admin</th>
                 <th>Ativo</th>
+                <th className="acoes-col">Ações</th>
               </tr>
             </thead>
             <tbody>
               {carregando && (
                 <tr>
-                  <td colSpan="5">Carregando...</td>
+                  <td colSpan="6">Carregando...</td>
                 </tr>
               )}
               {!carregando && usuarios.length === 0 && (
                 <tr>
-                  <td colSpan="5">Nenhum usuário encontrado.</td>
+                  <td colSpan="6">Nenhum usuário encontrado.</td>
                 </tr>
               )}
-              {usuarios.map((u) => (
-                <tr key={u.id}>
-                  <td data-label="Nome">{u.nome}</td>
-                  <td data-label="Email">{u.email}</td>
-                  <td data-label="Tipo">{u.tipo}</td>
-                  <td data-label="Admin">{u.admin ? "Sim" : "Não"}</td>
-                  <td data-label="Ativo">{u.ativo ? "Sim" : "Não"}</td>
-                </tr>
-              ))}
+              {usuarios.map((u) => {
+                const primeiroItemRef = (node) => {
+                  if (node) menuItemRefs.current[u.id] = node;
+                };
+
+                return (
+                  <tr key={u.id}>
+                    <td data-label="Nome">{u.nome}</td>
+                    <td data-label="Email">{u.email}</td>
+                    <td data-label="Tipo">{u.tipo}</td>
+                    <td data-label="Admin">{u.admin ? "Sim" : "Não"}</td>
+                    <td data-label="Ativo">{u.ativo ? "Sim" : "Não"}</td>
+                    <td data-label="Ações" className="cell-actions">
+                      <div
+                        className="acoes-menu"
+                        ref={(node) => {
+                          if (menuAbertoId === u.id) {
+                            menuRef.current = node;
+                          }
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="acoes-trigger"
+                          aria-haspopup="menu"
+                          aria-expanded={menuAbertoId === u.id}
+                          aria-controls={`acoes-menu-usuario-${u.id}`}
+                          onClick={() => abrirMenu(u.id)}
+                          ref={(node) => {
+                            if (node) menuButtonRefs.current[u.id] = node;
+                          }}
+                        >
+                          <span className="sr-only">Abrir ações</span>
+                          <span aria-hidden="true">⋮</span>
+                        </button>
+
+                        {menuAbertoId === u.id && (
+                          <div
+                            id={`acoes-menu-usuario-${u.id}`}
+                            role="menu"
+                            className="acoes-dropdown"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                fecharMenu();
+                                handleExcluir(u.id);
+                              }}
+                              ref={primeiroItemRef}
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

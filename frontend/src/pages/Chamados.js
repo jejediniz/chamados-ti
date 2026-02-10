@@ -19,6 +19,7 @@ export default function Chamados() {
   const { usuario } = useAuth();
   const isAdmin = usuario?.admin === true;
   const isTi = usuario?.tipo === "ti";
+  const podeDefinirPrioridade = isTi;
 
   const [chamados, setChamados] = useState([]);
   const [carregando, setCarregando] = useState(false);
@@ -129,11 +130,14 @@ export default function Chamados() {
     const payload = {
       titulo: form.titulo,
       descricao: form.descricao,
-      prioridade: form.prioridade,
+      prioridade: podeDefinirPrioridade ? form.prioridade : "media",
       tecnicoId: form.tecnicoId || undefined,
-    }
+    };
 
     if (editandoId) {
+      if (!podeDefinirPrioridade) {
+        delete payload.prioridade;
+      }
       payload.status = form.status || "aberto";
       await atualizarChamado(editandoId, payload);
     } else {
@@ -222,16 +226,25 @@ export default function Chamados() {
             required
           />
 
-          <Select
-            label="Prioridade"
-            name="prioridade"
-            value={form.prioridade}
-            onChange={handleChange}
-          >
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-          </Select>
+          {podeDefinirPrioridade ? (
+            <Select
+              label="Prioridade"
+              name="prioridade"
+              value={form.prioridade}
+              onChange={handleChange}
+            >
+              <option value="baixa">Baixa</option>
+              <option value="media">Média</option>
+              <option value="alta">Alta</option>
+            </Select>
+          ) : (
+            <Input
+              label="Prioridade"
+              value="Definida pelo técnico"
+              disabled
+              readOnly
+            />
+          )}
 
           <Select
             label="Técnico responsável"

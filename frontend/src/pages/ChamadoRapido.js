@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../contextos/authContext";
 import { useChamados } from "../contextos/chamadosContext";
 import { Button, Card, Select, Textarea } from "../components/ui";
 
@@ -12,6 +13,8 @@ const DEMANDAS_PADRAO = [
 ];
 
 export default function ChamadoRapido() {
+  const { usuario } = useAuth();
+  const isTi = usuario?.tipo === "ti";
   const { criarChamado } = useChamados();
 
   const [form, setForm] = useState({
@@ -42,7 +45,7 @@ export default function ChamadoRapido() {
       await criarChamado({
         titulo: form.titulo,
         descricao: form.descricao,
-        prioridade: form.prioridade,
+        prioridade: isTi ? form.prioridade : "media",
       });
 
       setForm({ titulo: "", descricao: "", prioridade: "media" });
@@ -87,11 +90,18 @@ export default function ChamadoRapido() {
             placeholder="Descreva o que está acontecendo com o máximo de detalhes"
           />
 
-          <Select label="Prioridade" name="prioridade" value={form.prioridade} onChange={handleChange}>
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-          </Select>
+          {isTi && (
+            <Select
+              label="Prioridade"
+              name="prioridade"
+              value={form.prioridade}
+              onChange={handleChange}
+            >
+              <option value="baixa">Baixa</option>
+              <option value="media">Média</option>
+              <option value="alta">Alta</option>
+            </Select>
+          )}
 
           <div className="form-actions center">
             <Button type="submit" variant="primary" disabled={carregando}>

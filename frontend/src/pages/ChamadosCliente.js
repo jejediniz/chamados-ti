@@ -31,13 +31,31 @@ export default function ChamadosCliente() {
   const [statusFiltro, setStatusFiltro] = useState("todos");
   const [filtroTexto, setFiltroTexto] = useState("");
 
-  const meusChamados = usuario?.id
-    ? chamados.filter((c) => c.usuario_id === usuario.id)
-    : [];
+  const isAdmin = usuario?.admin === true;
+  const isTi = usuario?.tipo === "ti";
+  const usuarioId = usuario?.id;
+
+  const chamadosPorPerfil = useMemo(() => {
+    if (!usuarioId) return [];
+
+    if (isAdmin) {
+      return chamados;
+    }
+
+    if (isTi) {
+      return chamados.filter(
+        (c) => (c.tecnico?.id ?? c.tecnico_id) === usuarioId
+      );
+    }
+
+    return chamados.filter(
+      (c) => (c.usuario_id ?? c.solicitante?.id) === usuarioId
+    );
+  }, [chamados, usuarioId, isAdmin, isTi]);
 
   const filteredChamados = useMemo(() => {
     const termos = filtroTexto.trim().toLowerCase();
-    return meusChamados.filter((c) => {
+    return chamadosPorPerfil.filter((c) => {
       const matchesStatus =
         statusFiltro === "todos" || c.status === statusFiltro;
 
@@ -49,7 +67,7 @@ export default function ChamadosCliente() {
 
       return matchesStatus && matchesTexto;
     });
-  }, [meusChamados, filtroTexto, statusFiltro]);
+  }, [chamadosPorPerfil, filtroTexto, statusFiltro]);
 
   if (carregando) {
     return <p>Carregando chamados...</p>;
