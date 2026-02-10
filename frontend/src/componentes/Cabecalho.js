@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../contextos/authContext";
+import { Button } from "../components/ui";
 
 export default function Cabecalho() {
   const { estaAutenticado, logout, usuario } = useAuth();
@@ -8,43 +9,47 @@ export default function Cabecalho() {
   const isTi = usuario?.tipo === "ti";
 
   const linkClass = ({ isActive }) =>
-    isActive ? "nav-btn active" : "nav-btn";
+    `nav-btn${isActive ? " active" : ""}`;
 
   if (!estaAutenticado) return null;
 
   return (
     <header className="app-header">
-      <h1>Sistema de Chamados de TI</h1>
+      <div className="app-header__inner">
+        <div className="app-header__title">
+          <h1>Sistema de Chamados</h1>
+          <p>Gerencie solicitações, acompanhe o time e mantenha a TI ágil.</p>
+        </div>
 
-      <nav className="top-nav">
-        <NavLink to="/" className={linkClass}>
-          Dashboard
-        </NavLink>
-
-        {(isTi || isAdmin) && (
-          <NavLink to="/chamados" className={linkClass}>
-            Gestão de Chamados
+        <nav className="top-nav">
+          <NavLink to="/" className={linkClass}>
+            Dashboard
           </NavLink>
-        )}
 
-        <NavLink to="/abrir-chamado" className={linkClass}>
-          Abrir Chamado
-        </NavLink>
+          {(isTi || isAdmin) && (
+            <NavLink to="/chamados" className={linkClass}>
+              Gestão de Chamados
+            </NavLink>
+          )}
 
-        <NavLink to="/meus-chamados" className={linkClass}>
-          Meus Chamados
-        </NavLink>
-
-        {isAdmin && (
-          <NavLink to="/usuarios" className={linkClass}>
-            Usuários
+          <NavLink to="/abrir-chamado" className={linkClass}>
+            Abrir Chamado
           </NavLink>
-        )}
 
-        <button onClick={logout} className="nav-btn logout">
-          Sair
-        </button>
-      </nav>
+          <NavLink to="/meus-chamados" className={linkClass}>
+            Meus Chamados
+          </NavLink>
+
+          {isAdmin && (
+            <NavLink to="/usuarios" className={linkClass}>
+              Usuários
+            </NavLink>
+          )}
+          <Button variant="ghost" className="nav-btn logout" onClick={logout}>
+            Sair
+          </Button>
+        </nav>
+      </div>
     </header>
   );
 }

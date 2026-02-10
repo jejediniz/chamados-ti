@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listarUsuarios, criarUsuario } from "../services/usuariosApi";
+import { Button, Input, Select } from "../components/ui";
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -78,74 +79,64 @@ export default function Usuarios() {
         <form onSubmit={handleSubmit} className="form-card">
           {erro && <div className="alert alert-error">{erro}</div>}
           {sucesso && <div className="alert alert-success">{sucesso}</div>}
-          <div className="form-group">
-            <label>Nome</label>
+          <Input
+            label="Nome"
+            name="nome"
+            placeholder="Nome completo"
+            value={form.nome}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            label="Email"
+            type="email"
+            name="email"
+            placeholder="email@exemplo.com"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+
+          <Input
+            label="Senha"
+            type="password"
+            name="senha"
+            placeholder="Senha inicial"
+            value={form.senha}
+            onChange={handleChange}
+            required
+          />
+
+          <Select label="Tipo" name="tipo" value={form.tipo} onChange={handleChange}>
+            <option value="comum">Comum</option>
+            <option value="ti">TI</option>
+          </Select>
+
+          <label className="checkbox-field">
             <input
-              name="nome"
-              placeholder="Nome completo"
-              value={form.nome}
+              type="checkbox"
+              name="admin"
+              checked={form.admin}
               onChange={handleChange}
             />
-          </div>
+            Administrador
+          </label>
 
-          <div className="form-group">
-            <label>Email</label>
+          <label className="checkbox-field">
             <input
-              type="email"
-              name="email"
-              placeholder="email@exemplo.com"
-              value={form.email}
+              type="checkbox"
+              name="ativo"
+              checked={form.ativo}
               onChange={handleChange}
             />
-          </div>
-
-          <div className="form-group">
-            <label>Senha</label>
-            <input
-              type="password"
-              name="senha"
-              placeholder="Senha inicial"
-              value={form.senha}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Tipo</label>
-            <select name="tipo" value={form.tipo} onChange={handleChange}>
-              <option value="comum">Comum</option>
-              <option value="ti">TI</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                name="admin"
-                checked={form.admin}
-                onChange={handleChange}
-              />{" "}
-              Administrador
-            </label>
-          </div>
-
-          <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                name="ativo"
-                checked={form.ativo}
-                onChange={handleChange}
-              />{" "}
-              Ativo
-            </label>
-          </div>
+            Ativo
+          </label>
 
           <div className="form-actions">
-            <button type="submit" className="btn-acao btn-editar">
+            <Button type="submit" variant="primary">
               Criar usuário
-            </button>
+            </Button>
           </div>
         </form>
 
@@ -176,11 +167,11 @@ export default function Usuarios() {
               )}
               {usuarios.map((u) => (
                 <tr key={u.id}>
-                  <td>{u.nome}</td>
-                  <td>{u.email}</td>
-                  <td>{u.tipo}</td>
-                  <td>{u.admin ? "Sim" : "Não"}</td>
-                  <td>{u.ativo ? "Sim" : "Não"}</td>
+                  <td data-label="Nome">{u.nome}</td>
+                  <td data-label="Email">{u.email}</td>
+                  <td data-label="Tipo">{u.tipo}</td>
+                  <td data-label="Admin">{u.admin ? "Sim" : "Não"}</td>
+                  <td data-label="Ativo">{u.ativo ? "Sim" : "Não"}</td>
                 </tr>
               ))}
             </tbody>

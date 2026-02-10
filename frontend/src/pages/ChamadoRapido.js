@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useChamados } from "../contextos/chamadosContext";
+import { Button, Card, Select, Textarea } from "../components/ui";
 
 const DEMANDAS_PADRAO = [
   "Computador não liga",
@@ -55,54 +56,50 @@ export default function ChamadoRapido() {
 
   return (
     <div className="center-page">
-      <div className="open-ticket">
+      <Card className="open-ticket">
         <h2>Abrir Chamado</h2>
-        <p>Informe o problema para o suporte de TI</p>
+        <p>Escolha uma demanda ou descreva o problema para o suporte.</p>
 
         {erro && <div className="alert alert-error">{erro}</div>}
         {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
         <form onSubmit={handleSubmit} className="open-form">
-          <div>
-            <label>Qual é o problema?</label>
-            <select name="titulo" value={form.titulo} onChange={handleChange}>
-              <option value="">Selecione</option>
-              {DEMANDAS_PADRAO.map((d, i) => (
-                <option key={i} value={d}>{d}</option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Selecione um problema"
+            name="titulo"
+            value={form.titulo}
+            onChange={handleChange}
+            helperText="Use um dos casos prontos ou insira a dúvida manualmente"
+          >
+            <option value="">Selecione</option>
+            {DEMANDAS_PADRAO.map((d, i) => (
+              <option key={i} value={d}>
+                {d}
+              </option>
+            ))}
+          </Select>
 
-          <div>
-            <label>Descrição</label>
-            <textarea
-              name="descricao"
-              value={form.descricao}
-              onChange={handleChange}
-              placeholder="Descreva o problema com detalhes"
-            />
-          </div>
+          <Textarea
+            label="Descrição"
+            name="descricao"
+            value={form.descricao}
+            onChange={handleChange}
+            placeholder="Descreva o que está acontecendo com o máximo de detalhes"
+          />
 
-          <div>
-            <label>Prioridade</label>
-            <select
-              name="prioridade"
-              value={form.prioridade}
-              onChange={handleChange}
-            >
-              <option value="baixa">Baixa</option>
-              <option value="media">Média</option>
-              <option value="alta">Alta</option>
-            </select>
-          </div>
+          <Select label="Prioridade" name="prioridade" value={form.prioridade} onChange={handleChange}>
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+          </Select>
 
           <div className="form-actions center">
-            <button className="btn-primary" disabled={carregando}>
+            <Button type="submit" variant="primary" disabled={carregando}>
               {carregando ? "Enviando..." : "Abrir Chamado"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

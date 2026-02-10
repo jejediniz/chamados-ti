@@ -1,5 +1,7 @@
 import { useAuth } from "../contextos/authContext";
 import { useChamados } from "../contextos/chamadosContext";
+import { useMemo, useState } from "react";
+import { Button, Input } from "../components/ui";
 
 const STATUS_LABEL = {
   aberto: "Aberto",
@@ -7,9 +9,47 @@ const STATUS_LABEL = {
   fechado: "Fechado",
 };
 
+const PRIORIDADE_LABEL = {
+  baixa: "Baixa",
+  media: "Média",
+  alta: "Alta",
+};
+
+const STATUS_FILTERS = [
+  { label: "Todos", value: "todos" },
+  { label: "Abertos", value: "aberto" },
+  { label: "Em andamento", value: "em_andamento" },
+  { label: "Fechados", value: "fechado" },
+];
+
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString("pt-BR") : "—";
+
 export default function ChamadosCliente() {
   const { usuario } = useAuth();
   const { chamados, carregando, erro } = useChamados();
+  const [statusFiltro, setStatusFiltro] = useState("todos");
+  const [filtroTexto, setFiltroTexto] = useState("");
+
+  const meusChamados = usuario?.id
+    ? chamados.filter((c) => c.usuario_id === usuario.id)
+    : [];
+
+  const filteredChamados = useMemo(() => {
+    const termos = filtroTexto.trim().toLowerCase();
+    return meusChamados.filter((c) => {
+      const matchesStatus =
+        statusFiltro === "todos" || c.status === statusFiltro;
+
+      const matchesTexto =
+        !termos ||
+        [c.titulo, c.descricao, c.solicitante?.nome, c.id]
+          .filter(Boolean)
+          .some((valor) => valor.toString().toLowerCase().includes(termos));
+
+      return matchesStatus && matchesTexto;
+    });
+  }, [meusChamados, filtroTexto, statusFiltro]);
 
   if (carregando) {
     return <p>Carregando chamados...</p>;
@@ -19,61 +59,118 @@ export default function ChamadosCliente() {
     return <p className="alert alert-error">{erro}</p>;
   }
 
-  const meusChamados = usuario?.id
-    ? chamados.filter((c) => c.usuario_id === usuario.id)
-    : [];
-
   return (
     <>
-      <div className="page-header">
+      <div className="page-header page-header--centered">
         <h2>Meus chamados</h2>
         <p className="page-subtitle">
           Acompanhe o andamento dos seus atendimentos
         </p>
       </div>
 
-      <div className="cliente-chamados">
-        {meusChamados.length === 0 && (
-          <p className="empty">Nenhum chamado registrado.</p>
+      <section className="meus-chamados">
+        <div className="meus-chamados-header">
+
+          <div className="filtro-status">
+            {STATUS_FILTERS.map((filtro) => (
+              <button
+                key={filtro.value}
+                type="button"
+                className={`filtro-btn ${
+                  statusFiltro === filtro.value ? "ativo" : ""
+                }`}
+                onClick={() => setStatusFiltro(filtro.value)}
+              >
+                {filtro.label}
+              </button>
+            ))}
+          </div>
+          <div className="filtro-busca">
+            <Input
+              label="Buscar chamados"
+              hideLabel
+              placeholder="Título, descrição ou solicitante"
+              value={filtroTexto}
+              onChange={(e) => setFiltroTexto(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="filtro-btn limpar"
+              onClick={() => setFiltroTexto("")}
+              disabled={!filtroTexto}
+            >
+              Limpar
+            </Button>
+          </div>
+        </div>
+
+        {filteredChamados.length === 0 && (
+          <p className="empty">Nenhum chamado encontrado neste filtro.</p>
         )}
 
-        {meusChamados.map((c) => (
-          <div key={c.id} className="cliente-card">
-            <div className="cliente-topo">
-              <span className={`status status-${c.status}`}>
-                {STATUS_LABEL[c.status] || c.status}
-              </span>
-              {c.created_at && (
-                <span className="data">
-                  {new Date(c.created_at).toLocaleDateString("pt-BR")}
+        <div className="cliente-list">
+          {filteredChamados.map((c) => (
+            <article key={c.id} className="cliente-card">
+              <div className="cliente-topo">
+                <span className={`status status-${c.status}`}>
+                  {STATUS_LABEL[c.status] || c.status}
                 </span>
-              )}
-            </div>
-
-            <h4 className="demanda">{c.titulo}</h4>
-
-            <div className="cliente-meta">
-              <span>
-                <strong>Solicitante:</strong> {c.solicitante?.nome || "—"}
-              </span>
-              {c.solicitante?.tipo && (
+                <span className="data">{formatDate(c.created_at)}</span>
+              </div>
+              <h4 className="demanda">{c.titulo}</h4>
+              <div className="cliente-meta">
                 <span>
-                  <strong>Origem:</strong> {c.solicitante.tipo}
+                  <strong>Solicitante:</strong> {c.solicitante?.nome || "—"}
                 </span>
-              )}
-              <span>
-                <strong>Técnico:</strong> {c.tecnico?.nome || "Sem responsável"}
-              </span>
-            </div>
+                {c.solicitante?.tipo && (
+                  <span>
+                    <strong>Origem:</strong> {c.solicitante.tipo}
+                  </span>
+                )}
+                <span>
+                  <strong>Técnico:</strong> {c.tecnico?.nome || "Sem responsável"}
+                </span>
+              </div>
 
-            {c.descricao && (
-              <p className="obs">
-                <strong>Descrição:</strong> {c.descricao}
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+              <div className="card-info-row">
+                <div>
+                  <small>Prioridade</small>
+                  <div className={`prioridade-badge prioridade-${c.prioridade}`}>
+                    {PRIORIDADE_LABEL[c.prioridade] || "—"}
+                  </div>
+                </div>
+
+                <div>
+                  <small>Status atual</small>
+                  <strong>{STATUS_LABEL[c.status] || c.status}</strong>
+                </div>
+              </div>
+
+              {c.descricao && (
+                <p className="obs">
+                  <strong>Descrição:</strong> {c.descricao}
+                </p>
+              )}
+
+              <div className="card-footer">
+                <span>
+                  <small>Criado em</small>
+                  <strong>{formatDate(c.created_at)}</strong>
+                </span>
+                <span>
+                  <small>Atualizado</small>
+                  <strong>{formatDate(c.updated_at)}</strong>
+                </span>
+                <span>
+                  <small>ID</small>
+                  <strong>{c.id}</strong>
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

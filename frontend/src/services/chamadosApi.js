@@ -19,6 +19,7 @@ export async function criarChamado(dados) {
     titulo: dados.titulo,
     descricao: dados.descricao,
     prioridade: dados.prioridade?.toLowerCase() || "media",
+    tecnicoId: dados.tecnicoId,
   });
 
   return response.data.data;
@@ -33,6 +34,7 @@ export async function atualizarChamado(id, dados) {
     descricao: dados.descricao,
     prioridade: dados.prioridade,
     status: dados.status,
+    tecnicoId: dados.tecnicoId,
   });
 
   return response.data.data;

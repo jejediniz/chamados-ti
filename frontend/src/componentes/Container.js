@@ -1,6 +1,6 @@
-export default function Container({ children }) {
+export default function Container({ children, className = "" }) {
   return (
-    <main className="container">
+    <main className={`container ${className}`.trim()}>
       {children}
     </main>
   );

@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useChamados } from "../contextos/chamadosContext";
+import { Button, Card } from "../components/ui";
 
 /* ======================
    HOOK DE ANIMAÇÃO
@@ -29,15 +31,16 @@ function useAnimatedNumber(valor, duracao = 500) {
 
 export default function Inicio() {
   const { chamados } = useChamados();
+  const navigate = useNavigate();
 
   /* ======================
      MÉTRICAS REAIS
   ====================== */
   const total = chamados.length;
 
-  const abertos = chamados.filter(c => c.status === "aberto").length;
-  const andamento = chamados.filter(c => c.status === "em_andamento").length;
-  const fechados = chamados.filter(c => c.status === "fechado").length;
+  const abertos = chamados.filter((c) => c.status === "aberto").length;
+  const andamento = chamados.filter((c) => c.status === "em_andamento").length;
+  const fechados = chamados.filter((c) => c.status === "fechado").length;
 
   /* ======================
      NÚMEROS ANIMADOS
@@ -47,36 +50,77 @@ export default function Inicio() {
   const andamentoAnimado = useAnimatedNumber(andamento);
   const fechadosAnimado = useAnimatedNumber(fechados);
 
+  const metricCards = useMemo(
+    () => [
+      {
+        key: "total",
+        label: "Total de chamados",
+        value: totalAnimado,
+        sublabel: "Chamados registrados no sistema",
+        variant: "primary",
+        icon: "📊",
+      },
+      {
+        key: "abertos",
+        label: "Abertos",
+        value: abertosAnimado,
+        sublabel: "Demandas aguardando atendimento",
+        variant: "warning",
+        icon: "📂",
+      },
+      {
+        key: "andamento",
+        label: "Em andamento",
+        value: andamentoAnimado,
+        sublabel: "Técnicos trabalhando ativo",
+        variant: "primary",
+        icon: "🛠️",
+      },
+      {
+        key: "fechados",
+        label: "Fechados",
+        value: fechadosAnimado,
+        sublabel: "Atendimentos concluídos",
+        variant: "success",
+        icon: "✅",
+      },
+    ],
+    [totalAnimado, abertosAnimado, andamentoAnimado, fechadosAnimado]
+  );
+
   return (
     <div>
-      {/* CABEÇALHO */}
-      <div className="page-header">
+      <div className="page-header page-header--centered">
         <h2>Dashboard</h2>
-        <p className="page-subtitle">Visão geral dos chamados</p>
-      </div>
-
-      {/* VISÃO GERAL */}
-      <div className="dashboard">
-        <div className="dashboard-card total">
-          <span>Total</span>
-          <strong>{totalAnimado}</strong>
-        </div>
-
-        <div className="dashboard-card aberto">
-          <span>Abertos</span>
-          <strong>{abertosAnimado}</strong>
-        </div>
-
-        <div className="dashboard-card atendimento">
-          <span>Em andamento</span>
-          <strong>{andamentoAnimado}</strong>
-        </div>
-
-        <div className="dashboard-card concluido">
-          <span>Fechados</span>
-          <strong>{fechadosAnimado}</strong>
+        <p className="page-subtitle">
+          Visão geral dos chamados com indicadores importantes e próximos passos.
+        </p>
+        <div className="page-header-actions">
+          <Button variant="ghost" onClick={() => navigate("/abrir-chamado")}>
+            Abrir chamado
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => navigate("/chamados")}
+            className="btn-md"
+          >
+            Gestão completa
+          </Button>
         </div>
       </div>
+
+      <section className="dashboard-grid">
+        {metricCards.map((card) => (
+          <Card key={card.key} className="metric-card">
+            <div className="metric-card__header">
+              <span className="metric-card__icon">{card.icon}</span>
+              <span className="metric-card__label">{card.label}</span>
+            </div>
+            <strong className="metric-card__value">{card.value}</strong>
+            <p className="metric-card__body">{card.sublabel}</p>
+          </Card>
+        ))}
+      </section>
     </div>
   );
 }

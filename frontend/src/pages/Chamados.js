@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contextos/authContext";
 import {
   listarChamados,
@@ -7,6 +7,7 @@ import {
   excluirChamado,
 } from "../services/chamadosApi";
 import { listarTecnicos } from "../services/usuariosApi";
+import { Button, Input, Select, Textarea } from "../components/ui";
 
 const STATUS_LABEL = {
   aberto: "Aberto",
@@ -30,11 +31,16 @@ export default function Chamados() {
     descricao: "",
     prioridade: "media",
     tecnicoId: "",
+    status: "aberto",
   });
   const [editandoId, setEditandoId] = useState(null);
   const [tecnicos, setTecnicos] = useState([]);
+  const [menuAbertoId, setMenuAbertoId] = useState(null);
+  const menuRef = useRef(null);
+  const menuButtonRefs = useRef({});
+  const menuItemRefs = useRef({});
 
-  async function carregarChamados(novaPagina = 1) {
+  const carregarChamados = useCallback(async (novaPagina = 1) => {
     setCarregando(true);
     setErro(null);
     try {
@@ -50,11 +56,11 @@ export default function Chamados() {
     } finally {
       setCarregando(false);
     }
-  }
+  }, [limite]);
 
   useEffect(() => {
     carregarChamados(1);
-  }, [limite]);
+  }, [carregarChamados]);
 
   useEffect(() => {
     async function buscarTecnicos() {
@@ -68,6 +74,46 @@ export default function Chamados() {
 
     buscarTecnicos();
   }, []);
+
+  const fecharMenu = useCallback(() => {
+    const idAtual = menuAbertoId;
+    setMenuAbertoId(null);
+    if (idAtual && menuButtonRefs.current[idAtual]) {
+      menuButtonRefs.current[idAtual].focus();
+    }
+  }, [menuAbertoId]);
+
+  useEffect(() => {
+    if (!menuAbertoId) return;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        fecharMenu();
+      }
+    }
+
+    function handlePointerDown(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        fecharMenu();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    const primeiroItem = menuItemRefs.current[menuAbertoId];
+    if (primeiroItem) {
+      primeiroItem.focus();
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [menuAbertoId, fecharMenu]);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -141,6 +187,10 @@ export default function Chamados() {
     carregarChamados(novaPagina);
   }
 
+  function abrirMenu(id) {
+    setMenuAbertoId((atual) => (atual === id ? null : id));
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -154,74 +204,66 @@ export default function Chamados() {
         <form onSubmit={handleSubmit} className="form-card">
           {erro && <div className="alert alert-error">{erro}</div>}
 
-          <div className="form-group">
-            <label>Título</label>
-            <input
-              name="titulo"
-              placeholder="Título"
-              value={form.titulo}
-              onChange={handleChange}
-            />
-          </div>
+          <Input
+            label="Título"
+            name="titulo"
+            placeholder="Título do chamado"
+            value={form.titulo}
+            onChange={handleChange}
+            required
+          />
 
-          <div className="form-group">
-            <label>Descrição</label>
-            <textarea
-              name="descricao"
-              placeholder="Descrição"
-              value={form.descricao}
-              onChange={handleChange}
-            />
-          </div>
+          <Textarea
+            label="Descrição"
+            name="descricao"
+            placeholder="Conte o que precisa ser resolvido"
+            value={form.descricao}
+            onChange={handleChange}
+            required
+          />
 
-          <div className="form-group">
-            <label>Prioridade</label>
-            <select
-              name="prioridade"
-              value={form.prioridade}
-              onChange={handleChange}
-            >
-              <option value="baixa">Baixa</option>
-              <option value="media">Média</option>
-              <option value="alta">Alta</option>
-            </select>
-          </div>
+          <Select
+            label="Prioridade"
+            name="prioridade"
+            value={form.prioridade}
+            onChange={handleChange}
+          >
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+          </Select>
 
-          <div className="form-group">
-            <label>Técnico responsável</label>
-            <select
-              name="tecnicoId"
-              value={form.tecnicoId}
-              onChange={handleChange}
-            >
-              <option value="">Sem atribuição</option>
-              {tecnicos.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.nome}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Técnico responsável"
+            name="tecnicoId"
+            value={form.tecnicoId}
+            onChange={handleChange}
+          >
+            <option value="">Sem atribuição</option>
+            {tecnicos.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.nome}
+              </option>
+            ))}
+          </Select>
 
           {editandoId && (
-            <div className="form-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-              >
-                <option value="aberto">Aberto</option>
-                <option value="em_andamento">Em andamento</option>
-                <option value="fechado">Fechado</option>
-              </select>
-            </div>
+            <Select
+              label="Status"
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+            >
+              <option value="aberto">Aberto</option>
+              <option value="em_andamento">Em andamento</option>
+              <option value="fechado">Fechado</option>
+            </Select>
           )}
 
           <div className="form-actions">
-            <button type="submit" className="btn-acao btn-editar">
-              {editandoId ? "Atualizar" : "Criar"}
-            </button>
+            <Button type="submit" variant="primary">
+              {editandoId ? "Atualizar chamado" : "Criar chamado"}
+            </Button>
           </div>
         </form>
 
@@ -252,7 +294,7 @@ export default function Chamados() {
                 <th>Solicitante</th>
                 <th>Técnico</th>
                 <th>Prioridade</th>
-                <th>Ações</th>
+                <th className="acoes-col">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -262,57 +304,111 @@ export default function Chamados() {
                 </tr>
               )}
 
-              {chamados.map((c) => (
+              {chamados.map((c) => {
+                const temAcoes = isTi || isAdmin;
+                const primeiroItemRef = (node) => {
+                  if (node) menuItemRefs.current[c.id] = node;
+                };
+
+                return (
                 <tr key={c.id}>
-                  <td>
+                  <td data-label="Status" className="cell-status">
                     <span className={`status status-${c.status}`}>
                       {STATUS_LABEL[c.status]}
                     </span>
                   </td>
-                  <td>{c.titulo}</td>
-                  <td>
+                  <td data-label="Título">{c.titulo}</td>
+                  <td data-label="Solicitante">
                     {c.solicitante?.nome || "—"}
                     {c.solicitante?.tipo && (
                       <div className="secondary-text">{c.solicitante.tipo}</div>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Técnico">
                     {c.tecnico?.nome || "—"}
                     {c.tecnico?.email && (
                       <div className="secondary-text">{c.tecnico.email}</div>
                     )}
                   </td>
-                  <td>{c.prioridade}</td>
-                  <td>
-                    <div className="acoes">
-                      {isTi && (
+                  <td data-label="Prioridade">{c.prioridade}</td>
+                  <td data-label="Ações" className="cell-actions">
+                    {temAcoes ? (
+                      <div
+                        className="acoes-menu"
+                        ref={(node) => {
+                          if (menuAbertoId === c.id) {
+                            menuRef.current = node;
+                          }
+                        }}
+                      >
                         <button
-                          onClick={() => assumirChamado(c.id)}
-                          className="btn-acao btn-editar"
+                          type="button"
+                          className="acoes-trigger"
+                          aria-haspopup="menu"
+                          aria-expanded={menuAbertoId === c.id}
+                          aria-controls={`acoes-menu-${c.id}`}
+                          onClick={() => abrirMenu(c.id)}
+                          ref={(node) => {
+                            if (node) menuButtonRefs.current[c.id] = node;
+                          }}
                         >
-                          Assumir
+                          <span className="sr-only">Abrir ações</span>
+                          <span aria-hidden="true">⋮</span>
                         </button>
-                      )}
-                      {isTi && (
-                        <button
-                          onClick={() => editarChamado(c)}
-                          className="btn-acao btn-editar"
-                        >
-                          Editar
-                        </button>
-                      )}
-                      {isAdmin && (
-                        <button
-                          onClick={() => remover(c.id)}
-                          className="btn-acao btn-excluir"
-                        >
-                          Excluir
-                        </button>
-                      )}
-                    </div>
+
+                        {menuAbertoId === c.id && (
+                          <div
+                            id={`acoes-menu-${c.id}`}
+                            role="menu"
+                            className="acoes-dropdown"
+                          >
+                            {isTi && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  fecharMenu();
+                                  assumirChamado(c.id);
+                                }}
+                                ref={primeiroItemRef}
+                              >
+                                Assumir
+                              </button>
+                            )}
+                            {isTi && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  fecharMenu();
+                                  editarChamado(c);
+                                }}
+                              >
+                                Editar
+                              </button>
+                            )}
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                onClick={() => {
+                                  fecharMenu();
+                                  remover(c.id);
+                                }}
+                                ref={!isTi ? primeiroItemRef : null}
+                              >
+                                Excluir
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="secondary-text">—</span>
+                    )}
                   </td>
                 </tr>
-              ))}
+              )})}
 
               {!carregando && chamados.length === 0 && (
                 <tr>
@@ -324,25 +420,27 @@ export default function Chamados() {
 
           {meta && meta.totalPages > 1 && (
             <div className="pagination">
-              <button
-                className="btn-acao"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => irParaPagina(pagina - 1)}
                 disabled={pagina <= 1 || carregando}
               >
                 Anterior
-              </button>
+              </Button>
 
               <span>
                 Página {pagina} de {meta.totalPages}
               </span>
 
-              <button
-                className="btn-acao"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => irParaPagina(pagina + 1)}
                 disabled={pagina >= meta.totalPages || carregando}
               >
                 Próxima
-              </button>
+              </Button>
             </div>
           )}
         </div>

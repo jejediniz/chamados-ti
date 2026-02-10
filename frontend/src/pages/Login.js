@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contextos/authContext";
+import { Button, Input, Card } from "../components/ui";
 
 export default function Login() {
   const { login, estaAutenticado, carregando, erro } = useAuth();
@@ -44,45 +45,48 @@ export default function Login() {
       {/* CABEÇALHO DO LOGIN (SEM BOTÕES) */}
       <header className="login-header">
         <h1>Chamados TI</h1>
+        <p>Bem-vindo novamente! Entre para acompanhar e resolver demandas.</p>
       </header>
 
-      {/* CONTEÚDO */}
-      <div className="center-page">
-        <div className="auth-card">
+      <div className="login-layout">
+        <Card className="auth-card">
           <h2>Login</h2>
-          <p>Informe suas credenciais para acessar o sistema</p>
+          <p>Informe suas credenciais para acessar o ambiente de chamados.</p>
 
-          {erroLocal && <div className="alert alert-error">{erroLocal}</div>}
-          {erro && <div className="alert alert-error">{erro}</div>}
+          {(erroLocal || erro) && (
+            <div role="status" aria-live="polite" className="alert alert-error">
+              {erroLocal || erro}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <div>
-              <label>Email</label>
-              <input
-                type="email"
-                placeholder="email@exemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              placeholder="email@exemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-            <div>
-              <label>Senha</label>
-              <input
-                type="password"
-                placeholder="********"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-              />
-            </div>
+            <Input
+              label="Senha"
+              type="password"
+              name="senha"
+              placeholder="••••••••"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required
+            />
 
             <div className="auth-actions">
-              <button type="submit" disabled={carregando}>
+              <Button type="submit" disabled={carregando}>
                 {carregando ? "Entrando..." : "Entrar"}
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       </div>
     </>
   );
